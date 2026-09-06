@@ -32,6 +32,7 @@ export type LegacyClientMessage =
   | { readonly type: "set_participation"; readonly active: boolean }
   | { readonly type: "set_bots"; readonly count: 1 | 2 | 3 }
   | { readonly type: "start"; readonly player_count: number }
+  | { readonly type: "start_trick" }
   | {
       readonly type: "shuffle_next_round";
       readonly from_position: number | null;
@@ -172,6 +173,8 @@ export const toCleanroomCommand = (
       return { type: "set_robots", count: message.count };
     case "start":
       return { type: "start_game" };
+    case "start_trick":
+      throw new Error("legacy start_trick is handled by the gateway");
     case "shuffle_next_round":
       return { type: "set_next_round_ready", ready: true };
     case "deal_next_round":
