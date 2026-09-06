@@ -1,5 +1,6 @@
 import * as React from "react";
 import type { JSX } from "react";
+import GuandanStartGate from "./GuandanStartGate";
 import { GuandanWebsocketContext } from "./GuandanWebsocketProvider";
 import {
   adaptGuandanServerMessage,
@@ -44,6 +45,7 @@ const GuandanStateProvider: React.FunctionComponent<
   return (
     <GuandanStateContext.Provider value={value}>
       {children}
+      <GuandanStartGate />
     </GuandanStateContext.Provider>
   );
 };
