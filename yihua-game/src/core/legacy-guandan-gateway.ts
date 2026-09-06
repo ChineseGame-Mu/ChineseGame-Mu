@@ -27,6 +27,7 @@ import type { TextSocket } from "./websocket-service.js";
 import type { UpgradedConnection } from "./websocket-upgrade.js";
 
 const LEGACY_PENDING_ROOM = "__legacy_guandan_pending__";
+const ROBOT_TURN_DELAY_MS = 900;
 
 type LegacyStateMessage = Extract<
   LegacyServerMessage,
@@ -41,6 +42,70 @@ interface PendingLegacyTrick {
 }
 
 const pendingLegacyTricks = new Map<string, PendingLegacyTrick>();
+const startedLegacyTricks = new Map<string, number>();
+
+const sleep = async (milliseconds: number): Promise<void> => {
+  await new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+};
+
+const legacyTrickStarted = (
+  roomId: string,
+  managed: ReturnType<ServerRuntime["rooms"]["get"]>,
+): boolean =>
+  managed.game.phase === "playing" &&
+  startedLegacyTricks.get(roomId) === managed.game.trick.completedTricks;
+
+const runLegacyRobots = async (
+  runtime: ServerRuntime,
+  roomId: string,
+): Promise<void> => {
+  for (let guard = 0; guard < 32; guard += 1) {
+    let managed = runtime.rooms.get(roomId);
+    if (managed.game.phase !== "playing" || !legacyTrickStarted(roomId, managed)) {
+      return;
+    }
+
+    const seat = managed.game.currentTurn;
+    const participant = managed.room.participants.find(
+      (candidate) => candidate.seat === seat,
+    );
+    if (participant?.kind !== "robot") return;
+
+    await sleep(ROBOT_TURN_DELAY_MS);
+    managed = runtime.rooms.get(roomId);
+    if (
+      managed.game.phase !== "playing" ||
+      !legacyTrickStarted(roomId, managed) ||
+      managed.game.currentTurn !== seat
+    ) {
+      continue;
+    }
+
+    const hand = managed.game.hands[seat] ?? [];
+    let played = false;
+    for (const card of hand) {
+      try {
+        const next = runtime.rooms.play(roomId, seat, [card.id]);
+        await runtime.websocket.broadcastGameState(next);
+        played = true;
+        break;
+      } catch {
+        // Try the next single card. The first legal one is sufficient for the
+        // clean-room robot until richer robot strategy is introduced.
+      }
+    }
+
+    if (played) continue;
+
+    managed = runtime.rooms.get(roomId);
+    if (managed.game.phase !== "playing") return;
+    if (managed.game.trick.leadingPlay === null) {
+      throw new Error("robot has no legal opening play");
+    }
+    const next = runtime.rooms.pass(roomId, seat);
+    await runtime.websocket.broadcastGameState(next);
+  }
+};
 
 const sendLegacy = async (
   socket: TextSocket,
@@ -479,6 +544,27 @@ export const attachLegacyGuandanConnection = async (
       if (active === undefined) {
         throw new Error("join is required before game commands");
       }
+
+      if (message.type === "start_trick") {
+        const managed = runtime.rooms.get(active.roomId);
+        if (managed.game.phase !== "playing") {
+          throw new Error("现在不能开始本轮");
+        }
+        if (pendingLegacyTricks.has(active.roomId)) {
+          throw new Error("请先结束本轮并收牌");
+        }
+        if (managed.game.trick.leadingPlay !== null) {
+          return;
+        }
+        startedLegacyTricks.set(
+          active.roomId,
+          managed.game.trick.completedTricks,
+        );
+        await runtime.websocket.broadcastGameState(managed);
+        await runLegacyRobots(runtime, active.roomId);
+        return;
+      }
+
       if (message.type === "end_round") {
         const pending = pendingLegacyTricks.get(active.roomId);
         if (
@@ -556,12 +642,32 @@ export const attachLegacyGuandanConnection = async (
         throw new Error("complete tribute and return tribute before playing");
       }
 
+      if (message.type === "play" || message.type === "pass") {
+        const managed = runtime.rooms.get(active.roomId);
+        if (
+          managed.game.phase === "playing" &&
+          managed.game.trick.leadingPlay === null &&
+          !legacyTrickStarted(active.roomId, managed)
+        ) {
+          throw new Error("请先点击“开始”，再出牌");
+        }
+      }
+
       const clean = toCleanroomCommand(message, active.adapter.compat);
       await runtime.websocket.handleText(
         active.adapter,
         { roomId: active.roomId, playerId: active.playerId },
         JSON.stringify(clean),
       );
+
+      if (message.type === "start" || message.type === "deal_next_round") {
+        startedLegacyTricks.delete(active.roomId);
+      }
+
+      if (message.type === "play" || message.type === "pass") {
+        await runLegacyRobots(runtime, active.roomId);
+      }
+
       if (message.type === "deal_next_round") {
         const managed = runtime.rooms.get(active.roomId);
         if (resolveLegacyTributeResistance(active.roomId, managed)) {
