@@ -1,4 +1,6 @@
+import { mandatoryTributeCard } from "../dist/core/competition.js";
 import { FIRST_ROUND_LEVEL_RANK } from "../dist/core/game-state.js";
+import { isLegalReturnTributeCard } from "../dist/core/native-tribute.js";
 import { createServerRuntime } from "../dist/core/server-runtime.js";
 import { SUPPORTED_PLAYER_COUNTS } from "../dist/core/table.js";
 import { attachUpgradedConnection } from "../dist/core/websocket-upgrade.js";
@@ -141,6 +143,7 @@ const createTable = async (playerCount) => {
     playTypeCoverage: {},
     tacticCoverage: {},
     levelRanksSeen: new Set(),
+    tributeMetrics: { single: 0, double: 0, anti: 0, paid: 0, returned: 0, completed: 0 },
     metrics: { playerCount, rounds: 0, actions: 0, plays: 0, passes: 0, reconnects: 0, staleErrors: 0, deadlocks: 0, stateErrors: 0, crashes: 0 },
   };
   for (let seat = 0; seat < playerCount; seat += 1) {
@@ -183,6 +186,44 @@ const reconnectOnePlayer = async (table) => {
   table.metrics.reconnects += 1;
 };
 
+const sendTributeCommand = async (table, managed) => {
+  const tribute = managed.tribute;
+  const game = managed.game;
+  if (!tribute || tribute.status === "complete") return false;
+  const levelRank = game.levelRank ?? FIRST_ROUND_LEVEL_RANK;
+  let seat;
+  let cardId;
+  let type;
+
+  if (tribute.status === "tribute") {
+    seat = tribute.pendingTributeSeats.find((candidate) => !tribute.tributeCards.some((selection) => selection.seat === candidate));
+    if (seat === undefined) throw new Error(`${table.roomId}: pending tribute seat missing`);
+    const card = mandatoryTributeCard(game.hands[seat] ?? [], levelRank);
+    cardId = card.id;
+    type = "tribute_card";
+    table.tributeMetrics.paid += 1;
+  } else {
+    seat = tribute.pendingReturnSeats.find((candidate) => !tribute.returnCards.some((selection) => selection.seat === candidate));
+    if (seat === undefined) throw new Error(`${table.roomId}: pending return seat missing`);
+    const card = (game.hands[seat] ?? []).find(({ card }) => isLegalReturnTributeCard(card, levelRank));
+    if (!card) throw new Error(`${table.roomId}: no legal return-tribute card for seat ${seat}`);
+    cardId = card.id;
+    type = "return_tribute";
+    table.tributeMetrics.returned += 1;
+  }
+
+  const connection = table.connections.get(seat);
+  if (!connection) throw new Error(`${table.roomId}: tribute connection missing for seat ${seat}`);
+  table.commandSequence += 1;
+  await connection.receive(JSON.stringify({ type, cardId, expectedRevision: managed.revision, commandId: `${type}-${table.commandSequence}` }));
+  table.tacticCoverage.tributeReturnStrategy = (table.tacticCoverage.tributeReturnStrategy ?? 0) + 1;
+  table.metrics.actions += 1;
+  const after = table.runtime.rooms.get(table.roomId);
+  if (after.revision !== managed.revision + 1) throw new Error(`${table.roomId}: tribute command revision mismatch`);
+  if (after.tribute?.status === "complete") table.tributeMetrics.completed += 1;
+  return true;
+};
+
 const sendGameCommand = async (table) => {
   const managed = table.runtime.rooms.get(table.roomId);
   const { game } = managed;
@@ -199,12 +240,16 @@ const sendGameCommand = async (table) => {
     if (next.game.currentTurn !== firstPlaceSeat) throw new Error(`${table.roomId}: first place did not lead next round`);
     if (next.game.hands.some((hand) => hand.length !== 27)) throw new Error(`${table.roomId}: next round hand count is not 27`);
     if (JSON.stringify(next.game.openingDraw) !== openingDraw) throw new Error(`${table.roomId}: opening draw changed between rounds`);
+    if (next.tribute?.kind === "single") table.tributeMetrics.single += 1;
+    if (next.tribute?.kind === "double") table.tributeMetrics.double += 1;
+    if (next.tribute?.kind === "anti-tribute") table.tributeMetrics.anti += 1;
     table.actionsInRound = 0;
     table.metrics.rounds += 1;
     table.publicMemory = createPublicMemory(table.playerCount);
     return;
   }
   if (game.phase !== "playing") throw new Error(`${table.roomId}: game is not playable`);
+  if (await sendTributeCommand(table, managed)) return;
   if (table.actionsInRound >= actionLimit) {
     table.metrics.deadlocks += 1;
     throw new Error(`${table.roomId}: round exceeded action limit ${actionLimit}`);
@@ -217,7 +262,6 @@ const sendGameCommand = async (table) => {
   const levelRank = game.levelRank ?? FIRST_ROUND_LEVEL_RANK;
   table.levelRanksSeen.add(levelRank);
 
-  // IMPORTANT: expert bot receives only its own hand plus public table information.
   const decision = chooseExpertAction({
     hand,
     levelRank,
@@ -292,7 +336,7 @@ if (process.env.QA_STANDARD && standardTable) {
     stateErrors: standardTable.metrics.stateErrors,
     crashes: standardTable.metrics.crashes,
     completedThroughA: standardTable.levelRanksSeen.has("A") && standardTable.levelRanksSeen.size > 1,
-    winnerTeam: null,
+    winnerTeam: standardTable.runtime.rooms.get(standardTable.roomId).game.matchWinner ?? null,
     hiddenInformationIsolation: true,
     illegalSignallingProtection: true,
     associationCompliance: false,
@@ -321,10 +365,10 @@ if (process.env.QA_STANDARD && standardTable) {
     humanStyleChecks: { passed: false },
     teamStrategyChecks: { passed: false },
     heartLevelWildcardChecks: { passed: (standardTable.playTypeCoverage.heartLevelWildcardPlay ?? 0) > 0 },
-    tributeChecks: { passed: false },
+    tributeChecks: { passed: standardTable.tributeMetrics.completed > 0 || standardTable.tributeMetrics.anti > 0, metrics: standardTable.tributeMetrics },
     cardConservationChecks: { passed: standardTable.metrics.stateErrors === 0 },
     expertTacticalChecks: { passed: false },
-    markdownReport: "# Guandan expert-bot QA\n\nThis report is intentionally truthful: observed strategy coverage is reported, while unimplemented engine rules remain false and keep associationCompliance=false.\n",
+    markdownReport: "# Guandan expert-bot QA\n\nNative tribute/return/anti-tribute is executed through the clean-room websocket state machine. Remaining association fields stay truthful until their deterministic and reporting suites are wired.\n",
   };
   console.log(JSON.stringify({ strategyQa: q }));
 }
