@@ -15,9 +15,14 @@ const GuandanStartGate: React.FunctionComponent = () => {
 
   const gameStarted =
     state.hand.length > 0 || state.handCounts.some((count) => count > 0);
+  const freshDeal =
+    state.cardsPerPlayer !== null &&
+    state.handCounts.length > 0 &&
+    state.handCounts.every((count) => count === state.cardsPerPlayer);
   const shouldOfferStart =
     state.seat !== null &&
     gameStarted &&
+    freshDeal &&
     state.nextRoundPhase === null &&
     state.pendingTribute === null &&
     !state.trickComplete &&
@@ -35,20 +40,11 @@ const GuandanStartGate: React.FunctionComponent = () => {
   }, []);
 
   React.useEffect(() => {
-    if (
-      state.lastPlay.length > 0 ||
-      state.tablePlays.length > 0 ||
-      state.trickComplete ||
-      state.nextRoundPhase !== null
-    ) {
+    if (!gameStarted || state.nextRoundPhase !== null) {
       setStarted(false);
+      setReady(false);
     }
-  }, [
-    state.lastPlay.length,
-    state.tablePlays.length,
-    state.trickComplete,
-    state.nextRoundPhase,
-  ]);
+  }, [gameStarted, state.nextRoundPhase]);
 
   React.useEffect(() => {
     if (!shouldOfferStart || started) {
@@ -85,7 +81,7 @@ const GuandanStartGate: React.FunctionComponent = () => {
       <button
         type="button"
         onClick={start}
-        aria-label="开始本轮出牌"
+        aria-label="开始本局出牌"
         style={{
           minWidth: 190,
           minHeight: 68,
@@ -102,7 +98,7 @@ const GuandanStartGate: React.FunctionComponent = () => {
         ▶ 开始
       </button>
       <small style={{ fontSize: 15, fontWeight: 700 }}>
-        按“开始”后，由当前应出牌的真人或机器人开始本轮
+        一局只需按一次“开始”，之后连续出牌直到本局结束
       </small>
     </div>,
     target,
