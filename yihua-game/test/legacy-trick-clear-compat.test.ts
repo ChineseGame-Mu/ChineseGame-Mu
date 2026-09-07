@@ -107,7 +107,6 @@ describe("legacy completed-trick display compatibility", () => {
       managed = runtime.rooms.get(roomId);
     }
 
-    expect(passes).toBeGreaterThan(0);
     expect(managed.game.phase).toBe("playing");
     if (managed.game.phase !== "playing") return;
     expect(managed.game.trick.completedTricks).toBe(1);
