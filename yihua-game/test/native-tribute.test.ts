@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Card, Rank } from "../src/core/cards.js";
+import type { Rank } from "../src/core/cards.js";
 import type { DeckCard } from "../src/core/deck.js";
 import { createLobbyState, startGame } from "../src/core/game-state.js";
 import {
@@ -9,9 +9,9 @@ import {
 } from "../src/core/native-tribute.js";
 import { parseClientMessage } from "../src/core/protocol.js";
 import { buildRoundPlacements } from "../src/core/round-result.js";
-import { createRuntimeSnapshot } from "../src/core/runtime-snapshot.js";
 import type { ManagedRoom } from "../src/core/room-manager.js";
 import { createRoom } from "../src/core/room.js";
+import { createRuntimeSnapshot } from "../src/core/runtime-snapshot.js";
 
 const suited = (
   id: string,
@@ -107,15 +107,24 @@ describe("native competitive tribute state machine", () => {
     expect(tribute.pendingTributeSeats).toEqual([]);
   });
 
-  it("parses native tribute websocket commands", () => {
+  it("parses native tribute websocket commands and rejects empty card ids", () => {
     expect(
       parseClientMessage(
-        JSON.stringify({ type: "tribute_card", cardId: "c1", expectedRevision: 7 }),
+        JSON.stringify({
+          type: "tribute_card",
+          cardId: "c1",
+          expectedRevision: 7,
+        }),
       ),
     ).toMatchObject({ type: "tribute_card", cardId: "c1", expectedRevision: 7 });
     expect(
-      parseClientMessage(JSON.stringify({ type: "return_tribute", cardId: "c2" })),
+      parseClientMessage(
+        JSON.stringify({ type: "return_tribute", cardId: "c2" }),
+      ),
     ).toMatchObject({ type: "return_tribute", cardId: "c2" });
+    expect(() =>
+      parseClientMessage(JSON.stringify({ type: "tribute_card", cardId: "" })),
+    ).toThrow(/non-empty cardId/);
   });
 
   it("persists an in-progress tribute exchange in runtime snapshots", () => {
