@@ -42,7 +42,7 @@ interface PendingLegacyTrick {
 }
 
 const pendingLegacyTricks = new Map<string, PendingLegacyTrick>();
-const startedLegacyTricks = new Map<string, number>();
+const startedLegacyGames = new Set<string>();
 
 const sleep = async (milliseconds: number): Promise<void> => {
   await new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
@@ -52,8 +52,7 @@ const legacyTrickStarted = (
   roomId: string,
   managed: ReturnType<ServerRuntime["rooms"]["get"]>,
 ): boolean =>
-  managed.game.phase === "playing" &&
-  startedLegacyTricks.get(roomId) === managed.game.trick.completedTricks;
+  managed.game.phase === "playing" && startedLegacyGames.has(roomId);
 
 const runLegacyRobots = async (
   runtime: ServerRuntime,
@@ -61,7 +60,11 @@ const runLegacyRobots = async (
 ): Promise<void> => {
   for (let guard = 0; guard < 32; guard += 1) {
     let managed = runtime.rooms.get(roomId);
-    if (managed.game.phase !== "playing" || !legacyTrickStarted(roomId, managed)) {
+    if (
+      managed.game.phase !== "playing" ||
+      !legacyTrickStarted(roomId, managed) ||
+      pendingLegacyTricks.has(roomId)
+    ) {
       return;
     }
 
@@ -556,10 +559,7 @@ export const attachLegacyGuandanConnection = async (
         if (managed.game.trick.leadingPlay !== null) {
           return;
         }
-        startedLegacyTricks.set(
-          active.roomId,
-          managed.game.trick.completedTricks,
-        );
+        startedLegacyGames.add(active.roomId);
         await runtime.websocket.broadcastGameState(managed);
         await runLegacyRobots(runtime, active.roomId);
         return;
@@ -579,6 +579,7 @@ export const attachLegacyGuandanConnection = async (
         await runtime.websocket.broadcastGameState(
           runtime.rooms.get(active.roomId),
         );
+        await runLegacyRobots(runtime, active.roomId);
         return;
       }
       if (
@@ -661,7 +662,7 @@ export const attachLegacyGuandanConnection = async (
       );
 
       if (message.type === "start" || message.type === "deal_next_round") {
-        startedLegacyTricks.delete(active.roomId);
+        startedLegacyGames.delete(active.roomId);
       }
 
       if (message.type === "play" || message.type === "pass") {
