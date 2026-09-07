@@ -52,7 +52,7 @@ export interface PlayingState {
   readonly trick: TrickState;
   readonly levelRank?: Rank;
   readonly finishedSeats?: readonly number[];
-  readonly teamLevels?: TeamLevels;
+  readonly teamLevels?: TeamLevels | undefined;
   readonly matchWinner?: Team | null;
 }
 
