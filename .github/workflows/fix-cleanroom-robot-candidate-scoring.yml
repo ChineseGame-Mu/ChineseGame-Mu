@@ -1,0 +1,151 @@
+name: Fix cleanroom robot candidate scoring
+on:
+  push:
+    branches:
+      - cleanroom/yihua-game-20260826
+    paths:
+      - .github/workflows/fix-cleanroom-robot-candidate-scoring.yml
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: cleanroom/yihua-game-20260826
+      - name: Patch robot candidate ordering
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('yihua-game/src/core/legacy-guandan-gateway.ts')
+          s = p.read_text()
+
+          marker = 'import type { ServerMessage } from "./protocol.js";\n'
+          imports = 'import { RANKS, type Rank } from "./cards.js";\nimport { classifyGameCardIds } from "./game-actions.js";\nimport type { ClassifiedHand } from "./hand.js";\n'
+          if imports not in s:
+              s = s.replace(marker, imports + marker)
+
+          insert_after = '  return candidates;\n};\n\n'
+          scoring = r'''const robotNormalStrength = (
+  hand: ClassifiedHand,
+  levelRank?: Rank,
+): number => {
+  if (hand.jokerSize !== undefined) {
+    return RANKS.length + 2 + (hand.jokerSize === "big" ? 1 : 0);
+  }
+  const rank = hand.rank ?? hand.highRank;
+  if (rank === undefined) return Number.MAX_SAFE_INTEGER;
+  if (
+    levelRank !== undefined &&
+    rank === levelRank &&
+    hand.highRank === undefined
+  ) {
+    return RANKS.length + 1;
+  }
+  return RANKS.indexOf(rank);
+};
+
+const robotBombStrength = (
+  hand: ClassifiedHand,
+  levelRank?: Rank,
+): number | null => {
+  if (hand.kind === "joker-bomb") return 10000;
+  if (hand.kind === "straight-flush") {
+    return 7000 + robotNormalStrength(hand, levelRank);
+  }
+  if (hand.kind !== "bomb") return null;
+  const rank = robotNormalStrength(hand, levelRank);
+  if (hand.size >= 6) return 8000 + hand.size * 100 + rank;
+  if (hand.size === 5) return 6000 + rank;
+  return 5000 + rank;
+};
+
+const ROBOT_KIND_ORDER: Readonly<Record<string, number>> = {
+  single: 0,
+  pair: 1,
+  triple: 2,
+  "full-house": 3,
+  straight: 4,
+  "consecutive-pairs": 5,
+  "consecutive-triples": 6,
+  bomb: 7,
+  "straight-flush": 8,
+  "joker-bomb": 9,
+  invalid: 99,
+};
+
+const orderedRobotCandidateCardIds = (
+  managed: ReturnType<ServerRuntime["rooms"]["get"]>,
+  seat: number,
+): string[][] => {
+  if (managed.game.phase !== "playing") return [];
+  const hand = managed.game.hands[seat] ?? [];
+  const currentHand = managed.game.trick.leadingPlay?.hand ?? null;
+  const levelRank = managed.game.levelRank;
+
+  return robotCandidateCardIds(hand)
+    .map((ids, index) => {
+      try {
+        const classified = classifyGameCardIds(managed.game, seat, ids);
+        const bomb = robotBombStrength(classified, levelRank);
+        const sameKindResponse =
+          currentHand !== null &&
+          bomb === null &&
+          classified.kind === currentHand.kind &&
+          classified.size === currentHand.size;
+        const responseClass =
+          currentHand === null
+            ? bomb === null ? 0 : 1
+            : sameKindResponse ? 0 : bomb !== null ? 1 : 2;
+        const rulesStrength =
+          bomb ?? robotNormalStrength(classified, levelRank);
+        const kindOrder = ROBOT_KIND_ORDER[classified.kind] ?? 98;
+        return {
+          ids,
+          index,
+          responseClass,
+          rulesStrength,
+          kindOrder,
+          size: classified.size,
+        };
+      } catch {
+        return {
+          ids,
+          index,
+          responseClass: 9,
+          rulesStrength: Number.MAX_SAFE_INTEGER,
+          kindOrder: 99,
+          size: ids.length,
+        };
+      }
+    })
+    .sort((left, right) =>
+      left.responseClass - right.responseClass ||
+      left.rulesStrength - right.rulesStrength ||
+      left.kindOrder - right.kindOrder ||
+      left.size - right.size ||
+      left.index - right.index,
+    )
+    .map(({ ids }) => ids);
+};
+
+'''
+          if 'const orderedRobotCandidateCardIds = (' not in s:
+              s = s.replace(insert_after, insert_after + scoring, 1)
+
+          old = '    const hand = managed.game.hands[seat] ?? [];\n    let played = false;\n    for (const cardIds of robotCandidateCardIds(hand)) {'
+          new = '    let played = false;\n    for (const cardIds of orderedRobotCandidateCardIds(managed, seat)) {'
+          if old not in s:
+              raise SystemExit('robot play loop marker not found')
+          s = s.replace(old, new, 1)
+
+          p.write_text(s)
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add yihua-game/src/core/legacy-guandan-gateway.ts
+          git commit -m "fix(cleanroom): score robot plays by Guandan strength" || exit 0
+          git push origin HEAD:cleanroom/yihua-game-20260826
