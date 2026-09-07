@@ -14,6 +14,7 @@ const GuandanStartGate: React.FunctionComponent = () => {
   const [started, setStarted] = React.useState(false);
   const [ready, setReady] = React.useState(false);
   const [target, setTarget] = React.useState<Element | null>(null);
+  const previousFreshDeal = React.useRef(false);
 
   const gameStarted =
     state.hand.length > 0 || state.handCounts.some((count) => count > 0);
@@ -60,11 +61,21 @@ const GuandanStartGate: React.FunctionComponent = () => {
   }, [started]);
 
   React.useEffect(() => {
-    if (!gameStarted || state.nextRoundPhase !== null) {
+    const isNewDeal = freshDeal && !previousFreshDeal.current;
+
+    if (!gameStarted) {
+      setStarted(false);
+      setReady(false);
+    } else if (isNewDeal) {
+      // A new hand has just been fully dealt. Re-arm the one-time Start gate.
+      // Do not reset on nextRoundPhase/trick transitions; otherwise the initial
+      // draw panel can reappear in the middle of the same hand.
       setStarted(false);
       setReady(false);
     }
-  }, [gameStarted, state.nextRoundPhase]);
+
+    previousFreshDeal.current = freshDeal;
+  }, [freshDeal, gameStarted]);
 
   React.useEffect(() => {
     if (!shouldOfferStart || started) {
