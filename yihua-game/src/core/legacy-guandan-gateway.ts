@@ -14,6 +14,8 @@ import {
   prepareLegacyTribute,
   resolveLegacyTributeResistance,
 } from "./legacy-tribute.js";
+import { RANKS, type Rank } from "./cards.js";
+import { classifyGameCardIds } from "./game-actions.js";
 import type { ServerMessage } from "./protocol.js";
 import {
   disconnectHuman,
@@ -181,6 +183,54 @@ const robotCandidateCardIds = (hand: readonly any[]): string[][] => {
   return candidates;
 };
 
+const robotNormalStrength = (
+  hand: ReturnType<typeof classifyGameCardIds>,
+  levelRank: Rank,
+): number => {
+  if (hand.jokerSize !== undefined) {
+    return RANKS.length + 2 + (hand.jokerSize === "big" ? 1 : 0);
+  }
+  const rank = hand.rank ?? hand.highRank;
+  if (rank === undefined) return 0;
+  if (rank === levelRank && hand.highRank === undefined) return RANKS.length + 1;
+  return RANKS.indexOf(rank);
+};
+
+const robotCandidatePriority = (
+  game: Extract<ReturnType<ServerRuntime["rooms"]["get"]>["game"], { phase: "playing" }>,
+  seat: number,
+  cardIds: readonly string[],
+): number => {
+  const hand = classifyGameCardIds(game, seat, cardIds, game.levelRank);
+  const strength = robotNormalStrength(hand, game.levelRank ?? "2");
+  switch (hand.kind) {
+    case "single":
+      return 0 + strength;
+    case "pair":
+      return 100 + strength;
+    case "triple":
+      return 200 + strength;
+    case "full-house":
+      return 300 + strength;
+    case "straight":
+      return 400 + strength;
+    case "consecutive-pairs":
+      return 500 + strength;
+    case "consecutive-triples":
+      return 600 + strength;
+    case "bomb":
+      if (hand.size >= 6) return 8000 + hand.size * 100 + strength;
+      if (hand.size == 5) return 6000 + strength;
+      return 5000 + strength;
+    case "straight-flush":
+      return 7000 + strength;
+    case "joker-bomb":
+      return 10000;
+    case "invalid":
+      return 20000;
+  }
+};
+
 const clearRobotWonTrick = async (
   runtime: ServerRuntime,
   roomId: string,
@@ -252,7 +302,12 @@ const runLegacyRobots = async (
     const beforeCompletedTricks = managed.game.trick.completedTricks;
     const hand = managed.game.hands[seat] ?? [];
     let played = false;
-    for (const cardIds of robotCandidateCardIds(hand)) {
+    const candidates = robotCandidateCardIds(hand).sort(
+      (left, right) =>
+        robotCandidatePriority(managed.game, seat, left) -
+        robotCandidatePriority(managed.game, seat, right),
+    );
+    for (const cardIds of candidates) {
       try {
         const next = runtime.rooms.play(roomId, seat, cardIds);
         await runtime.websocket.broadcastGameState(next);
