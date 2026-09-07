@@ -10,6 +10,12 @@ import {
   startNextRound,
   type GameState,
 } from "./game-state.js";
+import {
+  prepareNativeTribute,
+  submitNativeReturnTribute,
+  submitNativeTribute,
+  type NativeTributeState,
+} from "./native-tribute.js";
 import { createRoom, openLateJoinWindow, type RoomState } from "./room.js";
 import {
   isSupportedPlayerCount,
@@ -21,6 +27,7 @@ export interface ManagedRoom {
   readonly room: RoomState;
   readonly game: GameState;
   readonly revision: number;
+  readonly tribute?: NativeTributeState | undefined;
 }
 
 const activeCountForNextRound = (
@@ -66,6 +73,9 @@ const isAbandonedActiveRoom = (managed: ManagedRoom): boolean => {
   return humans.length > 0 && humans.every(({ connected }) => !connected);
 };
 
+const tributePending = (managed: ManagedRoom): boolean =>
+  managed.tribute !== undefined && managed.tribute.status !== "complete";
+
 export class RoomManager {
   private readonly rooms = new Map<string, ManagedRoom>();
   private readonly restoredRoomsAwaitingReconnect = new Set<string>();
@@ -80,6 +90,7 @@ export class RoomManager {
       room,
       game: createLobbyState(playerCount, 0),
       revision: 0,
+      tribute: undefined,
     } satisfies ManagedRoom;
     this.rooms.set(room.roomId, managed);
     return managed;
@@ -99,6 +110,7 @@ export class RoomManager {
         room: createRoom(roomId, managed.room.config.playerCount),
         game: createLobbyState(managed.room.config.playerCount, 0),
         revision: managed.revision + 1,
+        tribute: undefined,
       } satisfies ManagedRoom;
       this.rooms.set(roomId, reset);
       return reset;
@@ -179,6 +191,7 @@ export class RoomManager {
       room: startedRoom,
       game: startGame(createLobbyState(participantCount, botCount), random),
       revision: managed.revision + 1,
+      tribute: undefined,
     } satisfies ManagedRoom;
     this.restoredRoomsAwaitingReconnect.delete(roomId);
     this.rooms.set(roomId, next);
@@ -216,18 +229,75 @@ export class RoomManager {
       if (promotion.passedA) matchWinner = promotion.team;
     }
 
+    const nextGame = startNextRound(
+      completed,
+      random,
+      nextLevelRank,
+      nextTeamLevels,
+      matchWinner,
+    );
+    const tribute =
+      activeCount === 4 && completed.placements.length === 4
+        ? prepareNativeTribute(completed.placements, nextGame)
+        : undefined;
+
     const next = {
       ...managed,
-      game: startNextRound(
-        completed,
-        random,
-        nextLevelRank,
-        nextTeamLevels,
-        matchWinner,
-      ),
+      game: nextGame,
       revision: managed.revision + 1,
+      tribute,
     } satisfies ManagedRoom;
     this.restoredRoomsAwaitingReconnect.delete(roomId);
+    this.rooms.set(roomId, next);
+    return next;
+  }
+
+  submitTribute(
+    roomId: string,
+    seat: number,
+    cardId: string,
+  ): ManagedRoom {
+    const managed = this.get(roomId);
+    if (managed.game.phase !== "playing" || managed.tribute === undefined) {
+      throw new Error("no native tribute exchange is active");
+    }
+    const mutation = submitNativeTribute(
+      managed.game,
+      managed.tribute,
+      seat,
+      cardId,
+    );
+    const next = {
+      ...managed,
+      game: mutation.game,
+      tribute: mutation.tribute,
+      revision: managed.revision + 1,
+    } satisfies ManagedRoom;
+    this.rooms.set(roomId, next);
+    return next;
+  }
+
+  submitReturnTribute(
+    roomId: string,
+    seat: number,
+    cardId: string,
+  ): ManagedRoom {
+    const managed = this.get(roomId);
+    if (managed.game.phase !== "playing" || managed.tribute === undefined) {
+      throw new Error("no native tribute exchange is active");
+    }
+    const mutation = submitNativeReturnTribute(
+      managed.game,
+      managed.tribute,
+      seat,
+      cardId,
+    );
+    const next = {
+      ...managed,
+      game: mutation.game,
+      tribute: mutation.tribute,
+      revision: managed.revision + 1,
+    } satisfies ManagedRoom;
     this.rooms.set(roomId, next);
     return next;
   }
@@ -236,6 +306,9 @@ export class RoomManager {
     const managed = this.get(roomId);
     if (managed.game.phase !== "playing") {
       throw new Error("game is not accepting plays");
+    }
+    if (tributePending(managed)) {
+      throw new Error("tribute exchange must finish before play");
     }
 
     const next = {
@@ -252,6 +325,9 @@ export class RoomManager {
     const managed = this.get(roomId);
     if (managed.game.phase !== "playing") {
       throw new Error("game is not accepting passes");
+    }
+    if (tributePending(managed)) {
+      throw new Error("tribute exchange must finish before play");
     }
 
     const next = {
