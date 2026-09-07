@@ -45,7 +45,7 @@ export type ServerMessage =
       readonly roomId: string;
       readonly revision: number;
       readonly phase: "playing" | "round-complete";
-      readonly competitionPhase: "playing" | "tribute" | "return";
+      readonly competitionPhase?: "playing" | "tribute" | "return" | undefined;
       readonly currentTurn: number;
       readonly handCounts: readonly number[];
       readonly openingDraw: readonly Card[];
@@ -54,10 +54,10 @@ export type ServerMessage =
       readonly passedSeats: readonly number[];
       readonly finishedSeats: readonly number[];
       readonly completedTricks: number;
-      readonly tributeKind?: "none" | "single" | "double" | "anti-tribute";
-      readonly pendingTributeSeats?: readonly number[];
-      readonly pendingReturnSeats?: readonly number[];
-      readonly antiTribute?: boolean;
+      readonly tributeKind?: "none" | "single" | "double" | "anti-tribute" | undefined;
+      readonly pendingTributeSeats?: readonly number[] | undefined;
+      readonly pendingReturnSeats?: readonly number[] | undefined;
+      readonly antiTribute?: boolean | undefined;
     }
   | {
       readonly type: "private_hand";
