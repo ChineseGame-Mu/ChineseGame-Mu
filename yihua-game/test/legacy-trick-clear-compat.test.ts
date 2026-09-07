@@ -85,6 +85,7 @@ describe("legacy completed-trick display compatibility", () => {
     if (managed.game.phase !== "playing") return;
 
     const leaderSeat = managed.game.currentTurn;
+    await connections.get(leaderSeat)!.receive({ type: "start_trick" });
     await connections.get(leaderSeat)!.receive({
       type: "play",
       card_indexes: [0],
@@ -93,6 +94,7 @@ describe("legacy completed-trick display compatibility", () => {
     managed = runtime.rooms.get(roomId);
     expect(managed.game.phase).toBe("playing");
     if (managed.game.phase !== "playing") return;
+    expect(managed.game.trick.leadingPlay?.seat).toBe(leaderSeat);
 
     let passes = 0;
     while (
