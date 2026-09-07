@@ -54,11 +54,162 @@ const legacyTrickStarted = (
 ): boolean =>
   managed.game.phase === "playing" && startedLegacyGames.has(roomId);
 
+const robotCandidateCardIds = (hand: readonly any[]): string[][] => {
+  const candidates: string[][] = [];
+  const seen = new Set<string>();
+  const add = (cards: readonly any[]): void => {
+    const ids = cards.map(({ id }) => id as string);
+    const key = [...ids].sort().join("|");
+    if (ids.length > 0 && !seen.has(key)) {
+      seen.add(key);
+      candidates.push(ids);
+    }
+  };
+
+  const suited = hand.filter(({ card }) => card.kind === "suited");
+  const byRank = new Map<string, any[]>();
+  const bySuitRank = new Map<string, any[]>();
+  for (const entry of suited) {
+    const rankGroup = byRank.get(entry.card.rank) ?? [];
+    rankGroup.push(entry);
+    byRank.set(entry.card.rank, rankGroup);
+    const suitKey = `${entry.card.suit}:${entry.card.rank}`;
+    const suitGroup = bySuitRank.get(suitKey) ?? [];
+    suitGroup.push(entry);
+    bySuitRank.set(suitKey, suitGroup);
+  }
+
+  const ranks = [
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "J",
+    "Q",
+    "K",
+    "A",
+  ];
+  const straightWindows = [
+    ["A", "2", "3", "4", "5"],
+    ["2", "3", "4", "5", "6"],
+    ...Array.from({ length: 9 }, (_, index) =>
+      ranks.slice(index + 1, index + 6),
+    ),
+  ].filter((window) => window.length === 5);
+
+  for (const group of byRank.values()) {
+    if (group.length >= 3) add(group.slice(0, 3));
+    if (group.length >= 2) add(group.slice(0, 2));
+  }
+
+  for (const [tripleRank, tripleGroup] of byRank.entries()) {
+    if (tripleGroup.length < 3) continue;
+    for (const [pairRank, pairGroup] of byRank.entries()) {
+      if (pairRank !== tripleRank && pairGroup.length >= 2) {
+        add([...tripleGroup.slice(0, 3), ...pairGroup.slice(0, 2)]);
+      }
+    }
+  }
+
+  for (const window of straightWindows) {
+    const groups = window.map((rank) => byRank.get(rank));
+    if (
+      groups.every((group) => group !== undefined && group.length > 0)
+    ) {
+      add(groups.map((group) => group![0]!));
+    }
+    for (const suit of ["clubs", "diamonds", "spades", "hearts"]) {
+      const suitedGroups = window.map((rank) =>
+        bySuitRank.get(`${suit}:${rank}`),
+      );
+      if (
+        suitedGroups.every(
+          (group) => group !== undefined && group.length > 0,
+        )
+      ) {
+        add(suitedGroups.map((group) => group![0]!));
+      }
+    }
+  }
+
+  for (let index = 1; index <= ranks.length - 3; index += 1) {
+    const groups = ranks
+      .slice(index, index + 3)
+      .map((rank) => byRank.get(rank));
+    if (
+      groups.every((group) => group !== undefined && group.length >= 2)
+    ) {
+      add(groups.flatMap((group) => group!.slice(0, 2)));
+    }
+  }
+
+  for (let index = 1; index <= ranks.length - 2; index += 1) {
+    const groups = ranks
+      .slice(index, index + 2)
+      .map((rank) => byRank.get(rank));
+    if (
+      groups.every((group) => group !== undefined && group.length >= 3)
+    ) {
+      add(groups.flatMap((group) => group!.slice(0, 3)));
+    }
+  }
+
+  for (const group of byRank.values()) {
+    for (let size = group.length; size >= 4; size -= 1) {
+      add(group.slice(0, size));
+    }
+  }
+
+  const smallJokers = hand.filter(
+    ({ card }) => card.kind === "joker" && card.size === "small",
+  );
+  const bigJokers = hand.filter(
+    ({ card }) => card.kind === "joker" && card.size === "big",
+  );
+  if (smallJokers.length >= 2) add(smallJokers.slice(0, 2));
+  if (bigJokers.length >= 2) add(bigJokers.slice(0, 2));
+  if (smallJokers.length >= 2 && bigJokers.length >= 2) {
+    add([...smallJokers.slice(0, 2), ...bigJokers.slice(0, 2)]);
+  }
+
+  for (const card of hand) add([card]);
+  return candidates;
+};
+
+const clearRobotWonTrick = async (
+  runtime: ServerRuntime,
+  roomId: string,
+  beforeCompletedTricks: number,
+): Promise<boolean> => {
+  const managed = runtime.rooms.get(roomId);
+  if (
+    managed.game.phase !== "playing" ||
+    managed.game.trick.completedTricks <= beforeCompletedTricks
+  ) {
+    return false;
+  }
+  const winnerSeat = managed.game.currentTurn;
+  const winner = managed.room.participants.find(
+    ({ seat }) => seat === winnerSeat,
+  );
+  if (winner?.kind !== "robot") return false;
+
+  await sleep(1200);
+  pendingLegacyTricks.delete(roomId);
+  await runtime.websocket.broadcastGameState(runtime.rooms.get(roomId));
+  return true;
+};
+
 const runLegacyRobots = async (
   runtime: ServerRuntime,
   roomId: string,
 ): Promise<void> => {
-  for (let guard = 0; guard < 32; guard += 1) {
+  for (let guard = 0; guard < 64; guard += 1) {
     let managed = runtime.rooms.get(roomId);
     if (
       managed.game.phase !== "playing" ||
@@ -84,29 +235,33 @@ const runLegacyRobots = async (
       continue;
     }
 
+    const beforeCompletedTricks = managed.game.trick.completedTricks;
     const hand = managed.game.hands[seat] ?? [];
     let played = false;
-    for (const card of hand) {
+    for (const cardIds of robotCandidateCardIds(hand)) {
       try {
-        const next = runtime.rooms.play(roomId, seat, [card.id]);
+        const next = runtime.rooms.play(roomId, seat, cardIds);
         await runtime.websocket.broadcastGameState(next);
         played = true;
         break;
       } catch {
-        // Try the next single card. The first legal one is sufficient for the
-        // clean-room robot until richer robot strategy is introduced.
+        // Try the next legal Guandan pattern.
       }
     }
 
-    if (played) continue;
-
-    managed = runtime.rooms.get(roomId);
-    if (managed.game.phase !== "playing") return;
-    if (managed.game.trick.leadingPlay === null) {
-      throw new Error("robot has no legal opening play");
+    if (!played) {
+      managed = runtime.rooms.get(roomId);
+      if (managed.game.phase !== "playing") return;
+      if (managed.game.trick.leadingPlay === null) {
+        throw new Error("robot has no legal opening play");
+      }
+      const next = runtime.rooms.pass(roomId, seat);
+      await runtime.websocket.broadcastGameState(next);
     }
-    const next = runtime.rooms.pass(roomId, seat);
-    await runtime.websocket.broadcastGameState(next);
+
+    if (await clearRobotWonTrick(runtime, roomId, beforeCompletedTricks)) {
+      continue;
+    }
   }
 };
 
