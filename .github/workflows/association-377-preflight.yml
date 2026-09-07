@@ -1,0 +1,47 @@
+name: Association 377 Fast Preflight
+
+on:
+  push:
+    branches:
+      - cleanroom/yihua-game-20260826
+    paths:
+      - ".github/workflows/association-377-preflight.yml"
+      - "yihua-game/scripts/association-deterministic-qa.mjs"
+      - "yihua-game/src/core/**"
+      - "yihua-game/test/**"
+  workflow_dispatch:
+
+jobs:
+  deterministic-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: yihua-game
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - name: Build standalone server
+        run: npm run build
+      - name: Run deterministic association preflight
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { runAssociationDeterministicQa } from "./scripts/association-deterministic-qa.mjs";
+          const coverage = runAssociationDeterministicQa();
+          const failed = Object.entries(coverage)
+            .filter(([name, passed]) => name !== "allRequiredRulesPassed" && passed !== true)
+            .map(([name]) => name);
+          console.log(JSON.stringify({
+            type: "association_377_deterministic_preflight",
+            failed,
+            coverage
+          }, null, 2));
+          if (failed.length > 0 || coverage.allRequiredRulesPassed !== true) {
+            throw new Error(`ASSOCIATION 377 PREFLIGHT FAIL: ${failed.join(", ") || "allRequiredRulesPassed=false"}`);
+          }
+          console.log("ASSOCIATION_377_DETERMINISTIC_PREFLIGHT_OK");
+          NODE
