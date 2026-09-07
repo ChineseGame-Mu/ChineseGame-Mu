@@ -5,6 +5,8 @@ import { GuandanStateContext } from "./GuandanStateProvider";
 import { GuandanWebsocketContext } from "./GuandanWebsocketProvider";
 
 const START_BUTTON_DELAY_MS = 3500;
+const STARTED_BODY_CLASS = "guandan-hand-started";
+const STARTED_STYLE_ID = "guandan-hide-initial-draw-after-start";
 
 const GuandanStartGate: React.FunctionComponent = () => {
   const { state } = React.useContext(GuandanStateContext);
@@ -38,6 +40,24 @@ const GuandanStartGate: React.FunctionComponent = () => {
     const timer = window.setInterval(findTarget, 500);
     return () => window.clearInterval(timer);
   }, []);
+
+  React.useEffect(() => {
+    let style = document.getElementById(STARTED_STYLE_ID) as HTMLStyleElement | null;
+    if (style === null) {
+      style = document.createElement("style");
+      style.id = STARTED_STYLE_ID;
+      style.textContent = `body.${STARTED_BODY_CLASS} .guandan-initial-draw-mini { display: none !important; }`;
+      document.head.appendChild(style);
+    }
+
+    return () => {
+      document.body.classList.remove(STARTED_BODY_CLASS);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    document.body.classList.toggle(STARTED_BODY_CLASS, started);
+  }, [started]);
 
   React.useEffect(() => {
     if (!gameStarted || state.nextRoundPhase !== null) {
