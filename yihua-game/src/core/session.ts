@@ -16,6 +16,8 @@ type SessionClientMessage = Exclude<
   ClientMessage,
   | { readonly type: "start_game" }
   | { readonly type: "next_round" }
+  | { readonly type: "tribute_card" }
+  | { readonly type: "return_tribute" }
   | { readonly type: "play_cards" }
   | { readonly type: "pass_turn" }
 >;
