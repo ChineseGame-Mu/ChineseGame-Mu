@@ -34,11 +34,6 @@ const CLEANROOM_WEBSOCKET = "wss://card-games-yihua.onrender.com/api/guandan";
 const cleanroomWebsocketOverride = (): string | null => {
   const query = new URLSearchParams(window.location.search);
   if (query.get("cleanroom") !== "1") return null;
-
-  // The clean-room entry is deliberately isolated from the legacy production
-  // backend. Ignore stale or user-supplied backend/ws overrides while the
-  // clean-room flag is active so the accepted GuandanTable can only reach the
-  // new clean-room card-games-yihua service through the compatibility adapter.
   return CLEANROOM_WEBSOCKET;
 };
 
@@ -69,9 +64,7 @@ const websocketUri = (): string => {
     return base.endsWith("/api") ? `${base}/guandan` : `${base}/api/guandan`;
   }
 
-  if (location.hostname.endsWith(".vercel.app")) {
-    return TEST_WEBSOCKET;
-  }
+  if (location.hostname.endsWith(".vercel.app")) return TEST_WEBSOCKET;
 
   const protocol = location.protocol === "https:" ? "wss://" : "ws://";
   const basePath = location.pathname.endsWith("/")
@@ -112,14 +105,11 @@ const GuandanWebsocketProvider: React.FunctionComponent<
     const drainMessages = (): void => {
       messageDrainTimerRef.current = null;
       if (!mountedRef.current) return;
-
       const next = messageQueueRef.current[messageQueueIndexRef.current];
       if (next === undefined) return;
       messageQueueIndexRef.current += 1;
-
       sequenceRef.current += 1;
       setDelivery({ message: next, sequence: sequenceRef.current });
-
       if (messageQueueIndexRef.current < messageQueueRef.current.length) {
         messageDrainTimerRef.current = window.setTimeout(drainMessages, 8);
       } else {
@@ -140,7 +130,6 @@ const GuandanWebsocketProvider: React.FunctionComponent<
         );
         if (existing !== -1) messageQueueRef.current.splice(existing, 1);
       }
-
       if (messageQueueRef.current.length - messageQueueIndexRef.current >= 32) {
         messageQueueRef.current = messageQueueRef.current.filter(
           (queued, index) =>
@@ -156,11 +145,9 @@ const GuandanWebsocketProvider: React.FunctionComponent<
 
     const scheduleReconnect = (): void => {
       if (!mountedRef.current) return;
-
       if (reconnectTimerRef.current !== null) {
         window.clearTimeout(reconnectTimerRef.current);
       }
-
       const delay = Math.min(1000 * 2 ** reconnectAttemptRef.current, 10000);
       reconnectAttemptRef.current += 1;
       reconnectTimerRef.current = window.setTimeout(() => {
@@ -171,7 +158,6 @@ const GuandanWebsocketProvider: React.FunctionComponent<
 
     const connect = (): void => {
       if (!mountedRef.current) return;
-
       clearQueuedMessages();
       setStatus("connecting");
       const ws = new WebSocket(websocketUri());
@@ -180,20 +166,13 @@ const GuandanWebsocketProvider: React.FunctionComponent<
       ws.addEventListener("open", () => {
         if (websocketRef.current !== ws) return;
         reconnectAttemptRef.current = 0;
-        // Keep the UI in "connecting" until the Guandan server itself confirms
-        // protocol readiness. Sending join immediately on the transport-level
-        // open event can race the server handshake and leave auto-join stuck.
       });
 
       ws.addEventListener("message", (event: MessageEvent) => {
-        if (websocketRef.current !== ws || typeof event.data !== "string")
-          return;
-
+        if (websocketRef.current !== ws || typeof event.data !== "string") return;
         try {
           const message = JSON.parse(event.data) as GuandanServerMessage;
-          if (message.type === "connected") {
-            setStatus("connected");
-          }
+          if (message.type === "connected") setStatus("connected");
           enqueueMessage(message);
         } catch (error) {
           console.error("Failed to parse Guandan websocket message", error);
@@ -230,7 +209,6 @@ const GuandanWebsocketProvider: React.FunctionComponent<
   const send = React.useCallback((message: GuandanClientMessage): boolean => {
     const ws = websocketRef.current;
     if (ws === null || ws.readyState !== WebSocket.OPEN) return false;
-
     const query = new URLSearchParams(window.location.search);
     const playerCount = Number(query.get("players") ?? "4");
     const desiredSeat = Number(query.get("seat"));
@@ -241,7 +219,6 @@ const GuandanWebsocketProvider: React.FunctionComponent<
       desiredSeat:
         query.has("seat") && Number.isInteger(desiredSeat) ? desiredSeat : null,
     });
-
     ws.send(JSON.stringify(adapted));
     return true;
   }, []);
