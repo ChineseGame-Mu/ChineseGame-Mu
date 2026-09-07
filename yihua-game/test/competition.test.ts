@@ -90,12 +90,27 @@ describe("four-player competitive progression", () => {
     ).toBe("double");
   });
 
-  it("recognizes double-big-joker anti-tribute", () => {
+  it("recognizes single anti-tribute from two big jokers", () => {
     const hands: DeckCard[][] = [
       [suited("a", "3")],
-      [big("b1"), big("b2")],
+      [suited("b", "3")],
       [suited("c", "3")],
       [big("d1"), big("d2")],
+    ];
+    expect(
+      tributePlanForPlacements(
+        buildRoundPlacements(4, [0, 1, 2, 3]),
+        hands,
+      ).kind,
+    ).toBe("anti-tribute");
+  });
+
+  it("recognizes double anti-tribute when the two payers hold two big jokers in total", () => {
+    const hands: DeckCard[][] = [
+      [suited("a", "3")],
+      [big("b1")],
+      [suited("c", "3")],
+      [big("d1")],
     ];
     expect(
       tributePlanForPlacements(
