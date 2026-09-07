@@ -1,0 +1,52 @@
+name: Fix cleanroom robot scoring types
+on:
+  push:
+    branches:
+      - cleanroom/yihua-game-20260826
+    paths:
+      - .github/workflows/fix-cleanroom-robot-scoring-types.yml
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: cleanroom/yihua-game-20260826
+      - name: Fix TypeScript narrowing and validate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('yihua-game/src/core/legacy-guandan-gateway.ts')
+          s = p.read_text()
+          old = '''    const candidates = robotCandidateCardIds(hand).sort(
+      (left, right) =>
+        robotCandidatePriority(managed.game, seat, left) -
+        robotCandidatePriority(managed.game, seat, right),
+    );'''
+          new = '''    const playingGame = managed.game;
+    if (playingGame.phase !== "playing") return;
+    const candidates = robotCandidateCardIds(hand).sort(
+      (left, right) =>
+        robotCandidatePriority(playingGame, seat, left) -
+        robotCandidatePriority(playingGame, seat, right),
+    );'''
+          if old not in s:
+              raise SystemExit('candidate sort block not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+          PY
+          cd yihua-game
+          npm ci
+          npm run build
+          cd ..
+      - name: Remove temporary workflows and commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm -f .github/workflows/fix-cleanroom-robot-scoring-types.yml || true
+          git rm -f .github/workflows/fix-cleanroom-robot-candidate-scoring.yml || true
+          git add yihua-game/src/core/legacy-guandan-gateway.ts
+          git commit -m "fix(cleanroom): validate Guandan robot scoring order"
+          git push origin HEAD:cleanroom/yihua-game-20260826
