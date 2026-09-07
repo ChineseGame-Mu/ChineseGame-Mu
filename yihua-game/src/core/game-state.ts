@@ -1,4 +1,5 @@
 import type { Card, Rank } from "./cards.js";
+import { initialTeamLevels, type TeamLevels } from "./competition.js";
 import {
   createDeck,
   dealHands,
@@ -18,6 +19,7 @@ import {
   teamForSeat,
   teammateSeatsForSeat,
   type TableConfig,
+  type Team,
 } from "./table.js";
 import {
   createTrickState,
@@ -50,6 +52,8 @@ export interface PlayingState {
   readonly trick: TrickState;
   readonly levelRank?: Rank;
   readonly finishedSeats?: readonly number[];
+  readonly teamLevels?: TeamLevels;
+  readonly matchWinner?: Team | null;
 }
 
 export interface RoundCompleteState extends Omit<PlayingState, "phase"> {
@@ -107,6 +111,9 @@ export const dealAfterOpeningDraw = (
     trick,
     levelRank: FIRST_ROUND_LEVEL_RANK,
     finishedSeats: [],
+    teamLevels:
+      opening.config.playerCount === 4 ? initialTeamLevels() : undefined,
+    matchWinner: null,
   };
 };
 
@@ -120,6 +127,8 @@ export const startNextRound = (
   completed: RoundCompleteState,
   random: RandomSource = Math.random,
   nextLevelRank: Rank = completed.levelRank ?? FIRST_ROUND_LEVEL_RANK,
+  nextTeamLevels: TeamLevels | undefined = completed.teamLevels,
+  matchWinner: Team | null = completed.matchWinner ?? null,
 ): PlayingState => {
   const dealDeck = shuffleDeck(
     createDeck(completed.config.playerCount),
@@ -138,6 +147,8 @@ export const startNextRound = (
     trick,
     levelRank: nextLevelRank,
     finishedSeats: [],
+    teamLevels: nextTeamLevels,
+    matchWinner,
   };
 };
 
