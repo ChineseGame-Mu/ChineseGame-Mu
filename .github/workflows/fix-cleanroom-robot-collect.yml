@@ -1,0 +1,37 @@
+name: Fix cleanroom robot winner collection
+
+on:
+  push:
+    branches:
+      - cleanroom/yihua-game-20260826
+    paths:
+      - .github/workflows/fix-cleanroom-robot-collect.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: cleanroom/yihua-game-20260826
+      - name: Patch robot collection gate
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('yihua-game/src/core/legacy-guandan-gateway.ts')
+          s = p.read_text()
+          old = '''    if (\n      managed.game.phase !== "playing" ||\n      !legacyTrickStarted(roomId, managed) ||\n      pendingLegacyTricks.has(roomId)\n    ) {\n      return;\n    }\n\n    const seat = managed.game.currentTurn;'''
+          new = '''    if (\n      managed.game.phase !== "playing" ||\n      !legacyTrickStarted(roomId, managed)\n    ) {\n      return;\n    }\n\n    const pending = pendingLegacyTricks.get(roomId);\n    if (pending !== undefined) {\n      const winner = managed.room.participants.find(\n        ({ seat }) => seat === pending.winner,\n      );\n      if (winner?.kind !== "robot") return;\n\n      // A robot won the completed trick. Perform the same collection action\n      // that a human winner triggers with the end-round button, then resume.\n      await sleep(1200);\n      pendingLegacyTricks.delete(roomId);\n      await runtime.websocket.broadcastGameState(runtime.rooms.get(roomId));\n      continue;\n    }\n\n    const seat = managed.game.currentTurn;'''
+          if old not in s:
+              raise SystemExit('target block not found; refusing unsafe patch')
+          p.write_text(s.replace(old, new, 1))
+      - name: Commit patch
+        run: |
+          git config user.name "cleanroom-fix-bot"
+          git config user.email "cleanroom-fix-bot@users.noreply.github.com"
+          git add yihua-game/src/core/legacy-guandan-gateway.ts
+          git commit -m "fix(cleanroom): let robot winners collect completed tricks"
+          git push origin HEAD:cleanroom/yihua-game-20260826
