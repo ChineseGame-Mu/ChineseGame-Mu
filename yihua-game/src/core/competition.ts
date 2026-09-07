@@ -93,6 +93,9 @@ export const canAntiTribute = (hand: readonly DeckCard[]): boolean =>
   hand.filter(({ card }) => card.kind === "joker" && card.size === "big").length >=
   2;
 
+const bigJokerCount = (hand: readonly DeckCard[]): number =>
+  hand.filter(({ card }) => card.kind === "joker" && card.size === "big").length;
+
 export const tributePlanForPlacements = (
   placements: readonly RoundPlacement[],
   hands: readonly (readonly DeckCard[])[],
@@ -106,7 +109,11 @@ export const tributePlanForPlacements = (
   const fourth = placements[3]!;
   const doubleDown = first.team === second.team;
   const payers = doubleDown ? [third.seat, fourth.seat] : [fourth.seat];
-  if (payers.every((seat) => canAntiTribute(hands[seat] ?? []))) {
+  const payerBigJokers = payers.reduce(
+    (total, seat) => total + bigJokerCount(hands[seat] ?? []),
+    0,
+  );
+  if (payerBigJokers >= 2) {
     return { kind: "anti-tribute", transfers: [] };
   }
   if (doubleDown) {
