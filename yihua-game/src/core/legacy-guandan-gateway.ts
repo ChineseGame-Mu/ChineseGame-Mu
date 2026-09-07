@@ -213,10 +213,24 @@ const runLegacyRobots = async (
     let managed = runtime.rooms.get(roomId);
     if (
       managed.game.phase !== "playing" ||
-      !legacyTrickStarted(roomId, managed) ||
-      pendingLegacyTricks.has(roomId)
+      !legacyTrickStarted(roomId, managed)
     ) {
       return;
+    }
+
+    const pending = pendingLegacyTricks.get(roomId);
+    if (pending !== undefined) {
+      const winner = managed.room.participants.find(
+        ({ seat }) => seat === pending.winner,
+      );
+      if (winner?.kind !== "robot") return;
+
+      // A robot won the completed trick. Perform the same collection action
+      // that a human winner triggers with the end-round button, then resume.
+      await sleep(1200);
+      pendingLegacyTricks.delete(roomId);
+      await runtime.websocket.broadcastGameState(runtime.rooms.get(roomId));
+      continue;
     }
 
     const seat = managed.game.currentTurn;
