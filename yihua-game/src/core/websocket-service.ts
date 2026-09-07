@@ -26,6 +26,12 @@ const versionedRoomStateMessage = (managed: ManagedRoom): RoomStateMessage => ({
   revision: managed.revision,
 });
 
+const competitionPhase = (managed: ManagedRoom): "playing" | "tribute" | "return" => {
+  if (managed.tribute?.status === "tribute") return "tribute";
+  if (managed.tribute?.status === "return") return "return";
+  return "playing";
+};
+
 const gameStateMessage = (managed: ManagedRoom): ServerMessage | null => {
   if (managed.game.phase === "lobby" || managed.game.phase === "opening-draw") {
     return null;
@@ -33,12 +39,14 @@ const gameStateMessage = (managed: ManagedRoom): ServerMessage | null => {
 
   const finalDraw = managed.game.openingDraw.attempts.at(-1);
   if (!finalDraw) throw new Error("opening draw is missing");
+  const tribute = managed.tribute;
 
   return {
     type: "game_state",
     roomId: managed.room.roomId,
     revision: managed.revision,
     phase: managed.game.phase,
+    competitionPhase: competitionPhase(managed),
     currentTurn: managed.game.currentTurn,
     handCounts: managed.game.hands.map((hand) => hand.length),
     openingDraw: finalDraw.cards.map(({ card }) => card),
@@ -53,6 +61,10 @@ const gameStateMessage = (managed: ManagedRoom): ServerMessage | null => {
     passedSeats: managed.game.trick.passedSeats,
     finishedSeats: managed.game.finishedSeats ?? [],
     completedTricks: managed.game.trick.completedTricks,
+    tributeKind: tribute?.kind,
+    pendingTributeSeats: tribute?.pendingTributeSeats,
+    pendingReturnSeats: tribute?.pendingReturnSeats,
+    antiTribute: tribute?.kind === "anti-tribute",
   };
 };
 
@@ -101,6 +113,9 @@ const commandFingerprint = (message: MutatingMessage): string => {
     case "next_round":
     case "pass_turn":
       return JSON.stringify({ type: message.type });
+    case "tribute_card":
+    case "return_tribute":
+      return JSON.stringify({ type: message.type, cardId: message.cardId });
     case "play_cards":
       return JSON.stringify({
         type: message.type,
@@ -151,8 +166,7 @@ export class WebSocketService {
     const participant = managed.room.participants.find(
       ({ id, kind }) => id === context.playerId && kind === "human",
     );
-    if (!participant)
-      throw new Error("connection player is not seated in the room");
+    if (!participant) throw new Error("connection player is not seated in the room");
     return participant.seat;
   }
 
@@ -262,8 +276,7 @@ export class WebSocketService {
         return managed;
       }
 
-      if (!(await this.guardMutation(socket, context, managed, message)))
-        return managed;
+      if (!(await this.guardMutation(socket, context, managed, message))) return managed;
 
       if (message.type === "start_game") {
         const next = this.rooms.start(context.roomId);
@@ -276,6 +289,24 @@ export class WebSocketService {
 
       if (message.type === "next_round") {
         const next = this.rooms.nextRound(context.roomId);
+        this.rememberCommand(context.roomId, message);
+        await this.broadcastGameState(next);
+        await this.sendPrivateHands(next);
+        return next;
+      }
+
+      if (message.type === "tribute_card") {
+        const seat = this.humanSeat(managed, context);
+        const next = this.rooms.submitTribute(context.roomId, seat, message.cardId);
+        this.rememberCommand(context.roomId, message);
+        await this.broadcastGameState(next);
+        await this.sendPrivateHands(next);
+        return next;
+      }
+
+      if (message.type === "return_tribute") {
+        const seat = this.humanSeat(managed, context);
+        const next = this.rooms.submitReturnTribute(context.roomId, seat, message.cardId);
         this.rememberCommand(context.roomId, message);
         await this.broadcastGameState(next);
         await this.sendPrivateHands(next);
