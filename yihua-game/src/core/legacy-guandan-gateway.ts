@@ -120,9 +120,7 @@ const robotCandidateCardIds = (hand: readonly any[]): string[][] => {
 
   for (const window of straightWindows) {
     const groups = window.map((rank) => byRank.get(rank));
-    if (
-      groups.every((group) => group !== undefined && group.length > 0)
-    ) {
+    if (groups.every((group) => group !== undefined && group.length > 0)) {
       add(groups.map((group) => group![0]!));
     }
     for (const suit of ["clubs", "diamonds", "spades", "hearts"]) {
@@ -130,9 +128,7 @@ const robotCandidateCardIds = (hand: readonly any[]): string[][] => {
         bySuitRank.get(`${suit}:${rank}`),
       );
       if (
-        suitedGroups.every(
-          (group) => group !== undefined && group.length > 0,
-        )
+        suitedGroups.every((group) => group !== undefined && group.length > 0)
       ) {
         add(suitedGroups.map((group) => group![0]!));
       }
@@ -143,9 +139,7 @@ const robotCandidateCardIds = (hand: readonly any[]): string[][] => {
     const groups = ranks
       .slice(index, index + 3)
       .map((rank) => byRank.get(rank));
-    if (
-      groups.every((group) => group !== undefined && group.length >= 2)
-    ) {
+    if (groups.every((group) => group !== undefined && group.length >= 2)) {
       add(groups.flatMap((group) => group!.slice(0, 2)));
     }
   }
@@ -154,9 +148,7 @@ const robotCandidateCardIds = (hand: readonly any[]): string[][] => {
     const groups = ranks
       .slice(index, index + 2)
       .map((rank) => byRank.get(rank));
-    if (
-      groups.every((group) => group !== undefined && group.length >= 3)
-    ) {
+    if (groups.every((group) => group !== undefined && group.length >= 3)) {
       add(groups.flatMap((group) => group!.slice(0, 3)));
     }
   }
@@ -192,12 +184,13 @@ const robotNormalStrength = (
   }
   const rank = hand.rank ?? hand.highRank;
   if (rank === undefined) return 0;
-  if (rank === levelRank && hand.highRank === undefined) return RANKS.length + 1;
+  if (rank === levelRank && hand.highRank === undefined)
+    return RANKS.length + 1;
   return RANKS.indexOf(rank);
 };
 
 const robotCandidatePriority = (
-  game: Extract<ReturnType<ServerRuntime["rooms"]["get"]>["game"], { phase: "playing" }>,
+  game: any,
   seat: number,
   cardIds: readonly string[],
 ): number => {
