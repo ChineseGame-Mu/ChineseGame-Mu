@@ -84,7 +84,8 @@ const receivers = (tribute: NativeTributeState): readonly number[] =>
 const allSelected = (
   selections: readonly NativeTributeSelection[],
   seats: readonly number[],
-): boolean => seats.every((seat) => selections.some((selection) => selection.seat === seat));
+): boolean =>
+  seats.every((seat) => selections.some((selection) => selection.seat === seat));
 
 const selectionFor = (
   selections: readonly NativeTributeSelection[],
@@ -131,15 +132,22 @@ export const submitNativeTribute = (
   seat: number,
   cardId: string,
 ): NativeTributeMutation => {
-  if (tribute.status !== "tribute") throw new Error("tribute cards are not being accepted");
-  if (!tribute.pendingTributeSeats.includes(seat)) throw new Error("this seat is not required to pay tribute");
-  if (tribute.tributeCards.some((selection) => selection.seat === seat)) throw new Error("this seat has already paid tribute");
+  if (tribute.status !== "tribute")
+    throw new Error("tribute cards are not being accepted");
+  if (!tribute.pendingTributeSeats.includes(seat))
+    throw new Error("this seat is not required to pay tribute");
+  if (tribute.tributeCards.some((selection) => selection.seat === seat))
+    throw new Error("this seat has already paid tribute");
   const levelRank = game.levelRank ?? "2";
   const required = mandatoryTributeCard(game.hands[seat] ?? [], levelRank);
-  if (required.id !== cardId) throw new Error("tribute must be the highest eligible card");
+  if (required.id !== cardId)
+    throw new Error("tribute must be the highest eligible card");
   const removed = removeCard(game, seat, cardId);
   const tributeCards = [...tribute.tributeCards, { seat, card: removed.card }];
-  const readyForReturn = allSelected(tributeCards, tribute.pendingTributeSeats);
+  const readyForReturn = allSelected(
+    tributeCards,
+    tribute.pendingTributeSeats,
+  );
   return {
     game: removed.game,
     tribute: {
@@ -151,7 +159,10 @@ export const submitNativeTribute = (
   };
 };
 
-export const isLegalReturnTributeCard = (card: Card, levelRank: Rank): boolean => {
+export const isLegalReturnTributeCard = (
+  card: Card,
+  levelRank: Rank,
+): boolean => {
   if (card.kind !== "suited") return false;
   if (isHeartLevel(card, levelRank) || card.rank === levelRank) return false;
   return RANKS.indexOf(card.rank) <= RANKS.indexOf("10");
@@ -166,23 +177,28 @@ const finalizeNativeTribute = (
 
   if (tribute.kind === "single") {
     const transfer = tribute.transfers[0];
-    if (transfer === undefined) throw new Error("single tribute transfer missing");
+    if (transfer === undefined)
+      throw new Error("single tribute transfer missing");
     const paid = selectionFor(tribute.tributeCards, transfer.fromSeat).card;
     const returned = selectionFor(tribute.returnCards, transfer.toSeat).card;
     nextGame = addCard(nextGame, transfer.toSeat, paid);
     nextGame = addCard(nextGame, transfer.fromSeat, returned);
     leadSeat = transfer.fromSeat;
   } else if (tribute.kind === "double") {
-    if (tribute.transfers.length !== 2) throw new Error("double tribute requires two transfers");
+    if (tribute.transfers.length !== 2)
+      throw new Error("double tribute requires two transfers");
     const levelRank = game.levelRank ?? "2";
     const paid = tribute.transfers.map((transfer) => ({
       transfer,
       selection: selectionFor(tribute.tributeCards, transfer.fromSeat),
     }));
-    paid.sort((a, b) => cardStrength(b.selection.card.card, levelRank) - cardStrength(a.selection.card.card, levelRank));
-    const orderedReceivers = [...tribute.transfers].sort((a, b) => a.toSeat - b.toSeat);
-    const highReceiver = orderedReceivers[0]!.toSeat;
-    const lowReceiver = orderedReceivers[1]!.toSeat;
+    paid.sort(
+      (a, b) =>
+        cardStrength(b.selection.card.card, levelRank) -
+        cardStrength(a.selection.card.card, levelRank),
+    );
+    const highReceiver = tribute.transfers[0]!.toSeat;
+    const lowReceiver = tribute.transfers[1]!.toSeat;
     const high = paid[0]!;
     const low = paid[1]!;
     const highReturn = selectionFor(tribute.returnCards, highReceiver).card;
@@ -224,16 +240,22 @@ export const submitNativeReturnTribute = (
   seat: number,
   cardId: string,
 ): NativeTributeMutation => {
-  if (tribute.status !== "return") throw new Error("return cards are not being accepted");
-  if (!tribute.pendingReturnSeats.includes(seat)) throw new Error("this seat is not required to return tribute");
-  if (tribute.returnCards.some((selection) => selection.seat === seat)) throw new Error("this seat has already returned tribute");
+  if (tribute.status !== "return")
+    throw new Error("return cards are not being accepted");
+  if (!tribute.pendingReturnSeats.includes(seat))
+    throw new Error("this seat is not required to return tribute");
+  if (tribute.returnCards.some((selection) => selection.seat === seat))
+    throw new Error("this seat has already returned tribute");
   const hand = game.hands[seat];
   if (hand === undefined) throw new Error("seat is outside the table");
   const selected = hand.find(({ id }) => id === cardId);
-  if (selected === undefined) throw new Error("selected return card is not in seat's hand");
+  if (selected === undefined)
+    throw new Error("selected return card is not in seat's hand");
   const levelRank = game.levelRank ?? "2";
   if (!isLegalReturnTributeCard(selected.card, levelRank)) {
-    throw new Error("return card must be a non-level suited card ranked 2 through 10");
+    throw new Error(
+      "return card must be a non-level suited card ranked 2 through 10",
+    );
   }
   const removed = removeCard(game, seat, cardId);
   const returnCards = [...tribute.returnCards, { seat, card: removed.card }];
