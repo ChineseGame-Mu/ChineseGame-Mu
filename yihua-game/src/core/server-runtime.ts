@@ -29,6 +29,7 @@ export const createServerRuntime = (
       },
       game: saved.game,
       revision: saved.revision,
+      tribute: saved.tribute,
     });
   }
   const sockets = new RoomSocketHub();
