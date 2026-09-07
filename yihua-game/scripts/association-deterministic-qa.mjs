@@ -29,12 +29,12 @@ export const runAssociationDeterministicQa = () => {
     const big = classifyHand([joker("big")]);
     return canHandBeatWithLevel(level, a, "6") && canHandBeatWithLevel(small, level, "6") && canHandBeatWithLevel(big, small, "6");
   });
-  r.levelRankNaturalSequenceBehavior = classifyHandWithLevel([suited("6"), suited("7"), suited("8"), suited("9"), suited("10")], "6").kind === "straight";
+  r.levelRankNaturalSequenceBehavior = classifyHandWithLevel([suited("6","clubs"), suited("7","diamonds"), suited("8","spades"), suited("9","clubs"), suited("10","diamonds")], "6").kind === "straight";
   r.heartLevelWildcardSingleBehavior = classifyHandWithLevel([wild("6")], "6").kind === "single";
   r.heartLevelWildcardPair = levelKind([suited("9"), wild("6")], "6", "pair");
   r.heartLevelWildcardTriple = levelKind([suited("9"), suited("9", "spades"), wild("6")], "6", "triple");
   r.heartLevelWildcardFullHouse = levelKind([suited("Q"), suited("Q", "spades"), suited("8"), suited("8", "diamonds"), wild("6")], "6", "full-house");
-  r.heartLevelWildcardStraight = levelKind([suited("7"), suited("8"), suited("9"), suited("J"), wild("6")], "6", "straight");
+  r.heartLevelWildcardStraight = levelKind([suited("7","clubs"), suited("8","diamonds"), suited("9","spades"), suited("J","clubs"), wild("6")], "6", "straight");
   r.heartLevelWildcardConsecutivePairs = levelKind([suited("7"), suited("7", "spades"), suited("8"), suited("8", "diamonds"), suited("9"), wild("6")], "6", "consecutive-pairs");
   r.heartLevelWildcardConsecutiveTriples = levelKind([suited("10"), suited("10", "spades"), suited("10", "diamonds"), suited("J"), suited("J", "spades"), wild("6")], "6", "consecutive-triples");
   r.heartLevelWildcardStraightFlush = levelKind([suited("7", "spades"), suited("8", "spades"), suited("9", "spades"), suited("J", "spades"), wild("6")], "6", "straight-flush");
@@ -42,8 +42,8 @@ export const runAssociationDeterministicQa = () => {
   r.heartLevelWildcardDoubleUse = levelKind([suited("9"), suited("9", "spades"), wild("6"), wild("6")], "6", "bomb");
   r.heartLevelWildcardCannotRepresentJoker = classifyHandWithLevel([suited("9"), joker("small")], "6").kind === "invalid";
   r.heartLevelWildcardDeterministicInterpretation = JSON.stringify(classifyHandWithLevel([suited("Q"), suited("Q", "spades"), suited("8"), suited("8", "diamonds"), wild("6")], "6")) === JSON.stringify({ kind: "full-house", size: 5, rank: "Q" });
-  r.straightAceLow = kind([suited("A"), suited("2"), suited("3"), suited("4"), suited("5")], "straight");
-  r.straightAceHigh = kind([suited("10"), suited("J"), suited("Q"), suited("K"), suited("A")], "straight");
+  r.straightAceLow = kind([suited("A","clubs"), suited("2","diamonds"), suited("3","spades"), suited("4","clubs"), suited("5","diamonds")], "straight");
+  r.straightAceHigh = kind([suited("10","clubs"), suited("J","diamonds"), suited("Q","spades"), suited("K","clubs"), suited("A","diamonds")], "straight");
   r.rejectKingAceTwoWrap = classifyHand([suited("J"), suited("Q"), suited("K"), suited("A"), suited("2")]).kind === "invalid";
   const bomb = (rank, n) => classifyHand(Array.from({ length: n }, (_, i) => suited(rank, ["clubs","diamonds","hearts","spades"][i % 4])));
   const b4 = bomb("A", 4), b5 = bomb("3", 5), b6 = bomb("4", 6), b7 = bomb("5", 7), b8 = bomb("6", 8);
