@@ -1,3 +1,8 @@
+import {
+  applyPromotion,
+  initialTeamLevels,
+  promotionForPlacements,
+} from "./competition.js";
 import { passGameSeat, playGameCardIds } from "./game-actions.js";
 import {
   createLobbyState,
@@ -194,9 +199,32 @@ export class RoomManager {
             ...managed.game,
             config: { ...managed.game.config, playerCount: activeCount },
           };
+
+    let nextLevelRank = completed.levelRank;
+    let nextTeamLevels = completed.teamLevels;
+    let matchWinner = completed.matchWinner ?? null;
+
+    if (
+      activeCount === 4 &&
+      completed.placements.length === 4 &&
+      completed.outcome !== null
+    ) {
+      const levels = completed.teamLevels ?? initialTeamLevels();
+      const promotion = promotionForPlacements(completed.placements, levels);
+      nextTeamLevels = applyPromotion(levels, promotion);
+      nextLevelRank = promotion.after;
+      if (promotion.passedA) matchWinner = promotion.team;
+    }
+
     const next = {
       ...managed,
-      game: startNextRound(completed, random),
+      game: startNextRound(
+        completed,
+        random,
+        nextLevelRank,
+        nextTeamLevels,
+        matchWinner,
+      ),
       revision: managed.revision + 1,
     } satisfies ManagedRoom;
     this.restoredRoomsAwaitingReconnect.delete(roomId);
