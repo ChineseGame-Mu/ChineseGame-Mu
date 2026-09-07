@@ -1,0 +1,25 @@
+name: Native Tribute Verify
+
+on:
+  push:
+    branches:
+      - cleanroom-work/native-tribute-20260907
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: yihua-game
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - name: Build
+        run: npm run build
+      - name: Native tribute tests
+        run: npm test -- native-tribute.test.ts competition.test.ts
