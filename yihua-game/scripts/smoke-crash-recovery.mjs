@@ -63,21 +63,28 @@ const createQueue = (socket) => {
   socket.addEventListener("message", (event) => {
     const message = JSON.parse(String(event.data));
     const waiter = waiters.shift();
-    if (waiter) waiter(message);
+    if (waiter) waiter.resolve(message);
     else messages.push(message);
   });
   return () =>
     new Promise((resolve, reject) => {
       const message = messages.shift();
-      if (message) return resolve(message);
-      const timeout = setTimeout(
-        () => reject(new Error("websocket message timeout")),
-        15000,
-      );
-      waiters.push((value) => {
-        clearTimeout(timeout);
-        resolve(value);
-      });
+      if (message) {
+        resolve(message);
+        return;
+      }
+      const waiter = {
+        resolve: (value) => {
+          clearTimeout(timeout);
+          resolve(value);
+        },
+      };
+      const timeout = setTimeout(() => {
+        const index = waiters.indexOf(waiter);
+        if (index >= 0) waiters.splice(index, 1);
+        reject(new Error("websocket message timeout"));
+      }, 15000);
+      waiters.push(waiter);
     });
 };
 
@@ -94,6 +101,9 @@ const connect = async (seat) => {
 const nextOfType = async (client, type) => {
   for (let i = 0; i < 40; i += 1) {
     const message = await client.next();
+    if (message.type === "error") {
+      throw new Error(`websocket error: ${JSON.stringify(message)}`);
+    }
     if (message.type === type) return message;
   }
   throw new Error(`expected ${type} message was not received`);
@@ -161,7 +171,9 @@ try {
 
   for (const client of clients) {
     joinRoom(client, revision);
-    const updates = await Promise.all(clients.map(({ next }) => next()));
+    const updates = await Promise.all(
+      clients.map((connected) => nextOfType(connected, "room_state")),
+    );
     revision = updates[0].revision;
   }
 
@@ -172,9 +184,12 @@ try {
       commandId: "start-before-crash",
     }),
   );
-  await Promise.all(clients.map(({ next }) => next()));
-  const gameStates = await Promise.all(clients.map(({ next }) => next()));
-  const hands = await Promise.all(clients.map(({ next }) => next()));
+  const gameStates = await Promise.all(
+    clients.map((client) => nextOfType(client, "game_state")),
+  );
+  const hands = await Promise.all(
+    clients.map((client) => nextOfType(client, "private_hand")),
+  );
   const game = gameStates[0];
   const leader = game.currentTurn;
   const card = hands[leader].cards[0];
@@ -189,9 +204,6 @@ try {
   );
   let currentStates = await Promise.all(
     clients.map((client) => nextOfType(client, "game_state")),
-  );
-  await Promise.all(
-    clients.map((client) => nextOfType(client, "private_hand")),
   );
   let currentGame = currentStates[0];
 
