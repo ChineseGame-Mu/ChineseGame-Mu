@@ -62,3 +62,5 @@ jobs:
           set -euo pipefail
           npm install
           npm test -- --runInBand GuandanRoundResultHud.test.tsx
+
+# QA trigger marker: 2026-09-06
