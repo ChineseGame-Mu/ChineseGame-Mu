@@ -1,4 +1,4 @@
-name: Yihua Game Three-Round Bot Verification
+name: Yihua Game Full-Rules Team Strategy QA
 
 on:
   push:
@@ -6,6 +6,8 @@ on:
       - cleanroom/yihua-game-20260826
     paths:
       - ".github/workflows/cleanroom-yihua-game-three-round-bot.yml"
+      - "yihua-game/QA_GUANDAN_FULL_RULES_TEAM_STRATEGY.md"
+      - "yihua-game/scripts/**"
       - "yihua-game/src/core/**"
       - "yihua-game/test/**"
       - "backend/src/guandan_handler.rs"
@@ -15,9 +17,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  three-round-bot:
+  full-rules-team-strategy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: yihua-game
@@ -29,33 +31,96 @@ jobs:
       - run: npm install
       - name: Build standalone server
         run: npm run build
+
       - name: State-machine acceptance - final player auto-place through next round
         run: npm test -- last-place-auto-finish-next-round-matrix.test.ts
-      - name: Real 14-player bot full-game verification
+
+      - name: Full-rules human-style team-strategy bot tournament
         env:
-          SOAK_DURATION_MS: "60000"
+          QA_STANDARD: "guandan-full-rules-team-strategy-v1"
+          SOAK_DURATION_MS: "900000"
           SOAK_PLAYER_COUNTS: "14"
           SOAK_RECONNECT_EVERY: "1000000"
-          SOAK_ACTION_LIMIT: "100000"
+          SOAK_ACTION_LIMIT: "1000000"
+          QA_START_LEVEL: "2"
+          QA_REQUIRE_PASS_A: "1"
+          QA_REQUIRE_TEAM_STRATEGY: "1"
+          QA_REQUIRE_FULL_RULE_COVERAGE: "1"
+          QA_REPORT_JSON: "/tmp/guandan-team-strategy-report.json"
+          QA_REPORT_MD: "/tmp/guandan-team-strategy-report.md"
         run: |
           set -euo pipefail
-          node scripts/soak-websocket.mjs | tee /tmp/three-round-bot.log
+          node scripts/soak-websocket.mjs | tee /tmp/full-rules-team-strategy.log
+
+          # The strategy bot must emit a final JSON object carrying strategyQa.
+          # Old "three rounds + no deadlock" output is intentionally NOT sufficient.
           node --input-type=module <<'NODE'
           import fs from "node:fs";
-          const lines = fs.readFileSync("/tmp/three-round-bot.log", "utf8").trim().split(/\n+/);
-          const result = [...lines].reverse().map((line) => {
+
+          const raw = fs.readFileSync("/tmp/full-rules-team-strategy.log", "utf8");
+          const lines = raw.trim().split(/\n+/);
+          const parsed = lines.map((line) => {
             try { return JSON.parse(line); } catch { return null; }
-          }).find((value) => value?.tables);
-          if (!result) throw new Error("bot result JSON missing");
-          const table = result.tables.find((item) => item.playerCount === 14);
-          if (!table) throw new Error("missing 14-player bot table");
-          if (table.rounds < 3) throw new Error(`14-player table completed only ${table.rounds} full rounds`);
-          if (table.deadlocks || table.stateErrors || table.crashes) {
-            throw new Error(`14-player table has integrity failures: ${JSON.stringify(table)}`);
+          }).filter(Boolean);
+
+          const final = [...parsed].reverse().find((value) => value?.strategyQa || value?.qaReport);
+          if (!final) {
+            throw new Error("FULL-RULES QA FAIL: strategy QA telemetry/report missing. The old three-round single-card bot is no longer acceptable.");
           }
-          if (!table.plays || table.plays < 1) throw new Error(`14-player run produced no actual plays: ${JSON.stringify(table)}`);
-          console.log(JSON.stringify({type:"real_fourteen_player_full_game_pass", playerCount:14, validatedRounds:3, observedRounds:table.rounds, actions:table.actions, plays:table.plays, passes:table.passes, reconnects:table.reconnects}));
+
+          const q = final.strategyQa ?? final.qaReport;
+          const fail = (message) => { throw new Error(`FULL-RULES QA FAIL: ${message}`); };
+
+          if (q.qaStandard !== "guandan-full-rules-team-strategy-v1") fail(`wrong qaStandard: ${q.qaStandard}`);
+          if (q.deadlocks || q.stateErrors || q.crashes) fail(`integrity failures: ${JSON.stringify({deadlocks:q.deadlocks,stateErrors:q.stateErrors,crashes:q.crashes})}`);
+          if (!q.completedThroughA) fail("no team completed the formal 2 -> A -> pass-A victory path");
+          if (!q.winnerTeam) fail("winnerTeam missing");
+
+          const requiredTypes = ["single","pair","triple","straight","straightFlush","bomb4","bomb5","bomb6Plus"];
+          const coverage = q.playTypeCoverage ?? {};
+          for (const type of requiredTypes) {
+            if (!(Number(coverage[type]) > 0)) fail(`required play type not observed: ${type}`);
+          }
+
+          const deterministic = q.deterministicRuleCoverage ?? {};
+          if (deterministic.allSupportedRulesPassed !== true) fail("deterministic coverage did not prove all rules supported by the current engine");
+
+          if (!Array.isArray(q.teams) || q.teams.length < 2) fail("per-team report missing");
+          for (const team of q.teams) {
+            if (!team.teamName) fail("teamName missing");
+            if (!Array.isArray(team.players) || team.players.length < 2) fail(`${team.teamName}: player names missing`);
+            if (!Array.isArray(team.rounds) || team.rounds.length < 1) fail(`${team.teamName}: round analysis missing`);
+
+            let coordinationEvents = 0;
+            for (const round of team.rounds) {
+              if (!round.levelBefore || !round.levelAfter) fail(`${team.teamName}: level progression missing in round ${round.round}`);
+              if (!round.captain) fail(`${team.teamName}: best-hand/captain missing in round ${round.round}`);
+              if (!Array.isArray(round.coordinationMethods)) fail(`${team.teamName}: coordinationMethods missing in round ${round.round}`);
+              if (!Array.isArray(round.keyCoordinationEvents)) fail(`${team.teamName}: keyCoordinationEvents missing in round ${round.round}`);
+              coordinationEvents += round.keyCoordinationEvents.length;
+              if (!round.winReason && round.wonOrAdvanced) fail(`${team.teamName}: win/advance reason missing in round ${round.round}`);
+            }
+            if (coordinationEvents < 1) fail(`${team.teamName}: no real teammate-coordination event was recorded`);
+          }
+
+          if (q.humanStyleChecks?.passed !== true) fail("human-style natural play checks did not pass");
+          if (q.teamStrategyChecks?.passed !== true) fail("best-hand teammate-support strategy checks did not pass");
+
+          fs.writeFileSync("/tmp/guandan-team-strategy-report.json", JSON.stringify(q, null, 2));
+          const md = q.markdownReport;
+          if (typeof md !== "string" || !md.trim()) fail("human-readable Markdown team analysis report missing");
+          fs.writeFileSync("/tmp/guandan-team-strategy-report.md", md);
+
+          console.log(JSON.stringify({
+            type: "guandan_full_rules_team_strategy_pass",
+            qaStandard: q.qaStandard,
+            winnerTeam: q.winnerTeam,
+            completedThroughA: q.completedThroughA,
+            teams: q.teams.map((t) => ({teamName:t.teamName, players:t.players, rounds:t.rounds.length})),
+            playTypeCoverage: coverage
+          }));
           NODE
+
       - name: Frontend acceptance - current level and final winner ranking
         working-directory: frontend
         run: |
@@ -63,4 +128,14 @@ jobs:
           npm install
           npm test -- --runInBand GuandanRoundResultHud.test.tsx
 
-# QA trigger marker: 2026-09-06
+      - name: Publish team statistics reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: guandan-full-rules-team-strategy-report
+          if-no-files-found: ignore
+          path: |
+            /tmp/guandan-team-strategy-report.json
+            /tmp/guandan-team-strategy-report.md
+
+# QA standard: yihua-game/QA_GUANDAN_FULL_RULES_TEAM_STRATEGY.md
