@@ -18,6 +18,7 @@ import "./guandan-button-3d.css";
 import "./guandan-public-player-position.css";
 import "./cleanroom-join.css";
 import "./cleanroom-hand-fit.css";
+import "./cleanroom-hide-review-label.css";
 
 import AppStateProvider from "./AppStateProvider";
 import WebsocketProvider from "./WebsocketProvider";
