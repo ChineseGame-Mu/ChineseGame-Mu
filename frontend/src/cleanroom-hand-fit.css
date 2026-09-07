@@ -1,25 +1,35 @@
-/* Clean-room Guandan: keep every hand stack visible inside the left 75% panel.
- * Rank/joker stacks share the available width while card faces are allowed to
- * overlap horizontally. The final stack reserves enough right-side space for
- * its full card face, so later cards never disappear behind the review panel.
+/* Clean-room Guandan: force every rank/joker stack into the visible hand width.
+ * The review panel occupies the right 25%, so the hand itself must never grow
+ * horizontally. Use equal implicit grid columns and reserve one full card face
+ * at the right edge; stacks may overlap, but the last cards remain visible.
  */
 @media (min-width: 900px) {
+  html body .guandan-table:has(.guandan-public-zone) .guandan-hand-section {
+    overflow: visible !important;
+  }
+
   html body .guandan-table:has(.guandan-public-zone) .guandan-hand {
     box-sizing: border-box !important;
+    display: grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: minmax(0, 1fr) !important;
+    align-items: end !important;
     width: 100% !important;
     max-width: 100% !important;
+    min-width: 0 !important;
     gap: 0 !important;
-    overflow-x: hidden !important;
+    overflow-x: visible !important;
     overflow-y: hidden !important;
     padding-left: 3px !important;
-    padding-right: 58px !important;
+    padding-right: 88px !important;
   }
 
   html body .guandan-table:has(.guandan-public-zone) .guandan-card-stack {
-    flex: 1 1 0 !important;
-    width: auto !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
     min-width: 0 !important;
-    max-width: 76px !important;
+    max-width: none !important;
     overflow: visible !important;
   }
 
@@ -28,6 +38,15 @@
     .guandan-table:has(.guandan-public-zone)
     .guandan-card-stack
     > button {
+    position: relative !important;
     flex: 0 0 auto !important;
+    max-width: none !important;
+  }
+
+  html
+    body
+    .guandan-table:has(.guandan-public-zone)
+    .guandan-card-stack:last-child {
+    z-index: 5 !important;
   }
 }
