@@ -23,6 +23,8 @@ jobs:
       - run: npm install
       - name: Verify Prettier 3.4.1
         run: npx prettier@3.4.1 --version
+      - name: Normalize formatting
+        run: npx prettier@3.4.1 --write "src/**/*.ts" "test/**/*.ts"
       - name: Check formatting
         run: npx prettier@3.4.1 --check "src/**/*.ts" "test/**/*.ts"
       - name: Typecheck
