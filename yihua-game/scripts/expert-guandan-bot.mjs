@@ -76,7 +76,6 @@ export const generateLegalCandidates = (hand, levelRank, leadingHand = null) => 
 
   for (const card of hand) add([card]);
 
-  // Natural + wildcard-assisted pairs, triples and bombs (4-8 cards).
   for (const rank of RANKS) {
     const fixed = byRank.get(rank) ?? [];
     const pool = [...fixed, ...wildcardCards];
@@ -89,14 +88,12 @@ export const generateLegalCandidates = (hand, levelRank, leadingHand = null) => 
     }
   }
 
-  // Joker pair and joker bomb.
   const small = hand.filter((c) => c.card.kind === "joker" && c.card.size === "small");
   const big = hand.filter((c) => c.card.kind === "joker" && c.card.size === "big");
   if (small.length >= 2) add(small.slice(0, 2));
   if (big.length >= 2) add(big.slice(0, 2));
   if (small.length >= 2 && big.length >= 2) add([...small.slice(0, 2), ...big.slice(0, 2)]);
 
-  // Straights and straight flushes.
   for (const ranks of sequenceWindows(5)) {
     add(chooseOnePerRank(byRank, ranks, wildcardCards, 1));
     for (const suit of ["clubs", "diamonds", "spades", "hearts"]) {
@@ -111,7 +108,6 @@ export const generateLegalCandidates = (hand, levelRank, leadingHand = null) => 
     }
   }
 
-  // Three consecutive pairs and two consecutive triples.
   for (const ranks of sequenceWindows(3)) {
     add(chooseOnePerRank(byRank, ranks, wildcardCards, 2));
   }
@@ -119,7 +115,6 @@ export const generateLegalCandidates = (hand, levelRank, leadingHand = null) => 
     add(chooseOnePerRank(byRank, ranks, wildcardCards, 3));
   }
 
-  // Full houses, including wildcard-assisted constructions.
   for (const tripleRank of RANKS) {
     for (const pairRank of RANKS) {
       if (tripleRank === pairRank) continue;
@@ -194,46 +189,46 @@ export const chooseExpertAction = ({
   const partner = publicPartnerSeat(seat, playerCount);
   const partnerLeading = partner !== null && leadingPlay?.seat === partner;
   const partnerNearOut = partner !== null && (handCounts[partner] ?? 99) <= 2;
+  const partnerFinished = partner !== null && finishedSeats.includes(partner);
   const opponents = opponentSeats(seat, playerCount);
   const opponentNearOut = opponents.some((s) => (handCounts[s] ?? 99) <= 2 && !finishedSeats.includes(s));
   const ownNearOut = hand.length <= 5;
   const leading = leadingHand === null;
 
-  // Team yielding: do not overtake a partner who is controlling the trick unless an opponent is near out.
   if (partnerLeading && !opponentNearOut && !ownNearOut) {
     return {
       type: "pass",
       reason: "partner-yield",
-      tactics: ["partnerYielding", "roleSelectionFromLegalInformation", "playedCardMemory"],
+      tactics: [
+        "partnerYielding",
+        "roleSelectionFromLegalInformation",
+        "playedCardMemory",
+        ...(partnerNearOut ? ["dynamicRoleSwitch"] : []),
+      ],
     };
   }
 
   let best = null;
   let bestScore = Infinity;
+  const allOpenCandidates = generateLegalCandidates(hand, levelRank, null);
   for (const candidate of candidates) {
     const h = candidate.hand;
     let score = handStrength(h);
 
-    // Prefer shedding more cards while preserving valuable bombs/wildcards.
     score -= candidate.cards.length * (leading ? 22 : 8);
-    score += structureBreakPenalty(candidate, generateLegalCandidates(hand, levelRank, null));
+    score += structureBreakPenalty(candidate, allOpenCandidates);
     if (isBombLike(h)) score += opponentNearOut || ownNearOut ? 150 : 5000;
     const wildcardUse = candidate.cards.filter((c) => isWildcard(c, levelRank)).length;
     score += wildcardUse * (ownNearOut ? 5 : 90);
 
-    // On a free lead, prefer compact multi-card structures and low burdens.
     if (leading) {
       if (["straight", "consecutive-pairs", "consecutive-triples", "full-house"].includes(h.kind)) score -= 180;
       if (h.kind === "single") score += 40;
     } else {
-      // Minimum sufficient overtake: strength dominates after legality is satisfied.
       score += handStrength(h) * 2;
     }
 
-    // If partner is almost out and we control a fresh lead, feed a low single/pair.
     if (leading && partnerNearOut && ["single", "pair"].includes(h.kind)) score -= 220;
-
-    // Block sprinting opponents even if a bomb is necessary.
     if (opponentNearOut) score -= candidate.cards.length * 20;
 
     if (score < bestScore) {
@@ -250,11 +245,13 @@ export const chooseExpertAction = ({
     "remainingCardInferenceWithoutHiddenInfo",
   ];
   if (leading && partnerNearOut) tactics.push("partnerFeeding");
+  if (partnerNearOut || opponentNearOut || ownNearOut) tactics.push("dynamicRoleSwitch");
+  if (leading && partnerFinished) tactics.push("partnerCatchLeadExploitation");
   if (opponentNearOut) tactics.push("opponentSprintBlock", "endgameModeSwitch");
   if (best && isBombLike(best.hand)) tactics.push("bombForControlWithFollowup");
   else tactics.push("bombConservation");
   if (best?.cards.some((c) => isWildcard(c, levelRank))) tactics.push("wildcardValueOptimization");
-  if (ownNearOut) tactics.push("endgameModeSwitch");
+  if (ownNearOut) tactics.push("endgameModeSwitch", "upgradeOutcomeOptimization");
 
   return {
     type: "play",
