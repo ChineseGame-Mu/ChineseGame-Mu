@@ -1,4 +1,5 @@
 import type { GameState } from "./game-state.js";
+import type { NativeTributeState } from "./native-tribute.js";
 import type { ManagedRoom } from "./room-manager.js";
 import type { RoomState } from "./room.js";
 
@@ -12,6 +13,7 @@ export interface RuntimeRoomSnapshot {
   readonly room: RoomState;
   readonly game: GameState;
   readonly revision: number;
+  readonly tribute?: NativeTributeState | undefined;
 }
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
@@ -25,6 +27,7 @@ export const createRuntimeSnapshot = (
     room: clone(managed.room),
     game: clone(managed.game),
     revision: managed.revision,
+    tribute: managed.tribute === undefined ? undefined : clone(managed.tribute),
   })),
 });
 
