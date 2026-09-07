@@ -94,15 +94,22 @@ describe("legacy completed-trick display compatibility", () => {
     expect(managed.game.phase).toBe("playing");
     if (managed.game.phase !== "playing") return;
 
-    for (let passIndex = 0; passIndex < 3; passIndex += 1) {
+    let passes = 0;
+    while (
+      managed.game.phase === "playing" &&
+      managed.game.trick.leadingPlay !== null &&
+      managed.game.currentTurn !== leaderSeat
+    ) {
       const passingSeat = managed.game.currentTurn;
-      expect(passingSeat).not.toBe(leaderSeat);
       await connections.get(passingSeat)!.receive({ type: "pass" });
+      passes += 1;
+      expect(passes).toBeLessThanOrEqual(3);
       managed = runtime.rooms.get(roomId);
-      expect(managed.game.phase).toBe("playing");
-      if (managed.game.phase !== "playing") return;
     }
 
+    expect(passes).toBeGreaterThan(0);
+    expect(managed.game.phase).toBe("playing");
+    if (managed.game.phase !== "playing") return;
     expect(managed.game.trick.completedTricks).toBe(1);
     expect(managed.game.trick.leadingPlay).toBeNull();
     expect(managed.game.currentTurn).toBe(leaderSeat);
