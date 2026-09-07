@@ -37,7 +37,7 @@ jobs:
 
       - name: Full-rules human-style team-strategy bot tournament
         env:
-          QA_STANDARD: "guandan-full-rules-team-strategy-v1"
+          QA_STANDARD: "guandan-full-rules-team-strategy-v2"
           SOAK_DURATION_MS: "900000"
           SOAK_PLAYER_COUNTS: "14"
           SOAK_RECONNECT_EVERY: "1000000"
@@ -46,14 +46,15 @@ jobs:
           QA_REQUIRE_PASS_A: "1"
           QA_REQUIRE_TEAM_STRATEGY: "1"
           QA_REQUIRE_FULL_RULE_COVERAGE: "1"
+          QA_REQUIRE_HEART_LEVEL_WILDCARD: "1"
+          QA_REQUIRE_TRIBUTE_RULES: "1"
+          QA_REQUIRE_CARD_CONSERVATION: "1"
           QA_REPORT_JSON: "/tmp/guandan-team-strategy-report.json"
           QA_REPORT_MD: "/tmp/guandan-team-strategy-report.md"
         run: |
           set -euo pipefail
           node scripts/soak-websocket.mjs | tee /tmp/full-rules-team-strategy.log
 
-          # The strategy bot must emit a final JSON object carrying strategyQa.
-          # Old "three rounds + no deadlock" output is intentionally NOT sufficient.
           node --input-type=module <<'NODE'
           import fs from "node:fs";
 
@@ -65,25 +66,68 @@ jobs:
 
           const final = [...parsed].reverse().find((value) => value?.strategyQa || value?.qaReport);
           if (!final) {
-            throw new Error("FULL-RULES QA FAIL: strategy QA telemetry/report missing. The old three-round single-card bot is no longer acceptable.");
+            throw new Error("FULL-RULES QA FAIL: strategy QA telemetry/report missing. Old three-round/single-card telemetry is not acceptable.");
           }
 
           const q = final.strategyQa ?? final.qaReport;
           const fail = (message) => { throw new Error(`FULL-RULES QA FAIL: ${message}`); };
 
-          if (q.qaStandard !== "guandan-full-rules-team-strategy-v1") fail(`wrong qaStandard: ${q.qaStandard}`);
+          if (q.qaStandard !== "guandan-full-rules-team-strategy-v2") fail(`wrong qaStandard: ${q.qaStandard}`);
           if (q.deadlocks || q.stateErrors || q.crashes) fail(`integrity failures: ${JSON.stringify({deadlocks:q.deadlocks,stateErrors:q.stateErrors,crashes:q.crashes})}`);
           if (!q.completedThroughA) fail("no team completed the formal 2 -> A -> pass-A victory path");
           if (!q.winnerTeam) fail("winnerTeam missing");
 
-          const requiredTypes = ["single","pair","triple","straight","straightFlush","bomb4","bomb5","bomb6Plus"];
+          const requiredTypes = [
+            "single","pair","triple","fullHouse","straight",
+            "consecutivePairs","consecutiveTriples","straightFlush",
+            "bomb4","bomb5","bomb6Plus","jokerBomb","heartLevelWildcardPlay"
+          ];
           const coverage = q.playTypeCoverage ?? {};
           for (const type of requiredTypes) {
-            if (!(Number(coverage[type]) > 0)) fail(`required play type not observed: ${type}`);
+            if (!(Number(coverage[type]) > 0)) fail(`required real play type not observed: ${type}`);
           }
 
           const deterministic = q.deterministicRuleCoverage ?? {};
-          if (deterministic.allSupportedRulesPassed !== true) fail("deterministic coverage did not prove all rules supported by the current engine");
+          const requiredRules = [
+            "twoDeck108Cards",
+            "levelRankOrdering",
+            "levelRankNaturalSequenceBehavior",
+            "heartLevelWildcardSingleBehavior",
+            "heartLevelWildcardPair",
+            "heartLevelWildcardTriple",
+            "heartLevelWildcardFullHouse",
+            "heartLevelWildcardStraight",
+            "heartLevelWildcardConsecutivePairs",
+            "heartLevelWildcardConsecutiveTriples",
+            "heartLevelWildcardStraightFlush",
+            "heartLevelWildcardBomb",
+            "heartLevelWildcardDoubleUse",
+            "heartLevelWildcardCannotRepresentJoker",
+            "heartLevelWildcardDeterministicInterpretation",
+            "straightAceLow",
+            "straightAceHigh",
+            "rejectKingAceTwoWrap",
+            "bombHierarchy",
+            "jokerBombHighest",
+            "sameTypeSameSizeComparison",
+            "passAndLeadReset",
+            "finishOrderAndAutoLastPlace",
+            "partnerCatchLead",
+            "singleTribute",
+            "doubleTribute",
+            "returnTribute",
+            "antiTribute",
+            "heartLevelExcludedFromMandatoryTribute",
+            "cardConservationAcrossTribute",
+            "promotionByPlacements",
+            "levelKToA",
+            "passAEndCondition",
+            "illegalPlayStateAtomicity",
+            "allRequiredRulesPassed"
+          ];
+          for (const rule of requiredRules) {
+            if (deterministic[rule] !== true) fail(`deterministic rule missing/failed: ${rule}`);
+          }
 
           if (!Array.isArray(q.teams) || q.teams.length < 2) fail("per-team report missing");
           for (const team of q.teams) {
@@ -105,6 +149,9 @@ jobs:
 
           if (q.humanStyleChecks?.passed !== true) fail("human-style natural play checks did not pass");
           if (q.teamStrategyChecks?.passed !== true) fail("best-hand teammate-support strategy checks did not pass");
+          if (q.heartLevelWildcardChecks?.passed !== true) fail("heart-level wildcard / 逢人配 checks did not pass");
+          if (q.tributeChecks?.passed !== true) fail("tribute/return/anti-tribute checks did not pass");
+          if (q.cardConservationChecks?.passed !== true) fail("108-card conservation checks did not pass");
 
           fs.writeFileSync("/tmp/guandan-team-strategy-report.json", JSON.stringify(q, null, 2));
           const md = q.markdownReport;
@@ -117,7 +164,8 @@ jobs:
             winnerTeam: q.winnerTeam,
             completedThroughA: q.completedThroughA,
             teams: q.teams.map((t) => ({teamName:t.teamName, players:t.players, rounds:t.rounds.length})),
-            playTypeCoverage: coverage
+            playTypeCoverage: coverage,
+            deterministicRuleCoverage: deterministic
           }));
           NODE
 
