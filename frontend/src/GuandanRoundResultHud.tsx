@@ -176,6 +176,7 @@ const GuandanRoundResultHud = (): React.JSX.Element | null => {
     loadScores(state.room),
   );
   const lastCompleteFinishOrder = React.useRef<number[]>([]);
+  const resetForCurrentGame = React.useRef<string | null>(null);
 
   const playerCount = state.playerCount ?? state.players.length;
   if (
@@ -194,6 +195,37 @@ const GuandanRoundResultHud = (): React.JSX.Element | null => {
   React.useEffect(() => {
     setTeamScores(loadScores(state.room));
   }, [state.room]);
+
+  React.useEffect(() => {
+    const isFreshGame =
+      state.room !== null &&
+      playerCount >= 4 &&
+      state.initialDraw.length === playerCount &&
+      state.initialDrawWinner !== null &&
+      state.lastGameWinner === null &&
+      state.finishOrder.length === 0;
+    if (!isFreshGame) return;
+
+    const gameSignature = `${state.room}::${state.players.join("|")}::${state.initialDrawWinner}`;
+    if (resetForCurrentGame.current === gameSignature) return;
+
+    window.localStorage.setItem(
+      scoreStorageKey(state.room),
+      JSON.stringify(emptyScores),
+    );
+    window.localStorage.removeItem(scoreSignatureKey(state.room));
+    setTeamScores(emptyScores);
+    lastCompleteFinishOrder.current = [];
+    resetForCurrentGame.current = gameSignature;
+  }, [
+    state.room,
+    state.players,
+    state.initialDraw,
+    state.initialDrawWinner,
+    state.lastGameWinner,
+    state.finishOrder.length,
+    playerCount,
+  ]);
 
   const effectiveFinishOrder =
     state.finishOrder.length === state.players.length &&
