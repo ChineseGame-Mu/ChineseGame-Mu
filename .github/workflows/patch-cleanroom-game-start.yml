@@ -1,4 +1,4 @@
-name: Patch cleanroom one-start-per-game gate
+name: Patch cleanroom robot gameplay
 
 on:
   push:
@@ -17,32 +17,144 @@ jobs:
         with:
           ref: cleanroom/yihua-game-20260826
           fetch-depth: 0
-      - name: Patch backend game-start gate
+      - name: Patch backend robot gameplay
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p = Path('yihua-game/src/core/legacy-guandan-gateway.ts')
           s = p.read_text()
-          replacements = [
-            ('const startedLegacyTricks = new Map<string, number>();', 'const startedLegacyGames = new Set<string>();'),
-            ('  managed.game.phase === "playing" &&\n  startedLegacyTricks.get(roomId) === managed.game.trick.completedTricks;', '  managed.game.phase === "playing" && startedLegacyGames.has(roomId);'),
-            ('    if (managed.game.phase !== "playing" || !legacyTrickStarted(roomId, managed)) {\n      return;\n    }', '    if (\n      managed.game.phase !== "playing" ||\n      !legacyTrickStarted(roomId, managed) ||\n      pendingLegacyTricks.has(roomId)\n    ) {\n      return;\n    }'),
-            ('        startedLegacyTricks.set(\n          active.roomId,\n          managed.game.trick.completedTricks,\n        );', '        startedLegacyGames.add(active.roomId);'),
-            ('        await runtime.websocket.broadcastGameState(\n          runtime.rooms.get(active.roomId),\n        );\n        return;', '        await runtime.websocket.broadcastGameState(\n          runtime.rooms.get(active.roomId),\n        );\n        await runLegacyRobots(runtime, active.roomId);\n        return;'),
-            ('        startedLegacyTricks.delete(active.roomId);', '        startedLegacyGames.delete(active.roomId);'),
-          ]
-          for old, new in replacements:
-            if old not in s:
-              raise SystemExit(f'expected backend pattern not found: {old[:80]!r}')
-            s = s.replace(old, new, 1)
-          p.write_text(s)
+          start = s.index('const runLegacyRobots = async (')
+          end = s.index('\nconst sendLegacy = async (', start)
+          replacement = '''const robotCandidateCardIds = (hand: readonly any[]): string[][] => {
+            const candidates: string[][] = [];
+            const seen = new Set<string>();
+            const add = (cards: readonly any[]): void => {
+              const ids = cards.map(({ id }) => id as string);
+              const key = [...ids].sort().join("|");
+              if (ids.length > 0 && !seen.has(key)) {
+                seen.add(key);
+                candidates.push(ids);
+              }
+            };
+            const suited = hand.filter(({ card }) => card.kind === "suited");
+            const byRank = new Map<string, any[]>();
+            const bySuitRank = new Map<string, any[]>();
+            for (const entry of suited) {
+              const rankGroup = byRank.get(entry.card.rank) ?? [];
+              rankGroup.push(entry);
+              byRank.set(entry.card.rank, rankGroup);
+              const suitKey = `${entry.card.suit}:${entry.card.rank}`;
+              const suitGroup = bySuitRank.get(suitKey) ?? [];
+              suitGroup.push(entry);
+              bySuitRank.set(suitKey, suitGroup);
+            }
+            const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+            const straightWindows = [
+              ["A", "2", "3", "4", "5"],
+              ["2", "3", "4", "5", "6"],
+              ...Array.from({ length: 9 }, (_, index) => ranks.slice(index + 1, index + 6)),
+            ].filter((window) => window.length === 5);
+            for (const group of byRank.values()) {
+              if (group.length >= 3) add(group.slice(0, 3));
+              if (group.length >= 2) add(group.slice(0, 2));
+            }
+            for (const [tripleRank, tripleGroup] of byRank.entries()) {
+              if (tripleGroup.length < 3) continue;
+              for (const [pairRank, pairGroup] of byRank.entries()) {
+                if (pairRank !== tripleRank && pairGroup.length >= 2) add([...tripleGroup.slice(0, 3), ...pairGroup.slice(0, 2)]);
+              }
+            }
+            for (const window of straightWindows) {
+              const groups = window.map((rank) => byRank.get(rank));
+              if (groups.every((group) => group !== undefined && group.length > 0)) add(groups.map((group) => group![0]!));
+              for (const suit of ["clubs", "diamonds", "spades", "hearts"]) {
+                const suitedGroups = window.map((rank) => bySuitRank.get(`${suit}:${rank}`));
+                if (suitedGroups.every((group) => group !== undefined && group.length > 0)) add(suitedGroups.map((group) => group![0]!));
+              }
+            }
+            for (let index = 1; index <= ranks.length - 3; index += 1) {
+              const groups = ranks.slice(index, index + 3).map((rank) => byRank.get(rank));
+              if (groups.every((group) => group !== undefined && group.length >= 2)) add(groups.flatMap((group) => group!.slice(0, 2)));
+            }
+            for (let index = 1; index <= ranks.length - 2; index += 1) {
+              const groups = ranks.slice(index, index + 2).map((rank) => byRank.get(rank));
+              if (groups.every((group) => group !== undefined && group.length >= 3)) add(groups.flatMap((group) => group!.slice(0, 3)));
+            }
+            for (const group of byRank.values()) for (let size = group.length; size >= 4; size -= 1) add(group.slice(0, size));
+            const smallJokers = hand.filter(({ card }) => card.kind === "joker" && card.size === "small");
+            const bigJokers = hand.filter(({ card }) => card.kind === "joker" && card.size === "big");
+            if (smallJokers.length >= 2) add(smallJokers.slice(0, 2));
+            if (bigJokers.length >= 2) add(bigJokers.slice(0, 2));
+            if (smallJokers.length >= 2 && bigJokers.length >= 2) add([...smallJokers.slice(0, 2), ...bigJokers.slice(0, 2)]);
+            for (const card of hand) add([card]);
+            return candidates;
+          };
+
+          const clearRobotWonTrick = async (
+            runtime: ServerRuntime,
+            roomId: string,
+            beforeCompletedTricks: number,
+          ): Promise<boolean> => {
+            const managed = runtime.rooms.get(roomId);
+            if (managed.game.phase !== "playing" || managed.game.trick.completedTricks <= beforeCompletedTricks) return false;
+            const winnerSeat = managed.game.currentTurn;
+            const winner = managed.room.participants.find(({ seat }) => seat === winnerSeat);
+            if (winner?.kind !== "robot") return false;
+            await sleep(1200);
+            pendingLegacyTricks.delete(roomId);
+            await runtime.websocket.broadcastGameState(runtime.rooms.get(roomId));
+            return true;
+          };
+
+          const runLegacyRobots = async (
+            runtime: ServerRuntime,
+            roomId: string,
+          ): Promise<void> => {
+            for (let guard = 0; guard < 64; guard += 1) {
+              let managed = runtime.rooms.get(roomId);
+              if (managed.game.phase !== "playing" || !legacyTrickStarted(roomId, managed) || pendingLegacyTricks.has(roomId)) return;
+              const seat = managed.game.currentTurn;
+              const participant = managed.room.participants.find((candidate) => candidate.seat === seat);
+              if (participant?.kind !== "robot") return;
+              await sleep(ROBOT_TURN_DELAY_MS);
+              managed = runtime.rooms.get(roomId);
+              if (managed.game.phase !== "playing" || !legacyTrickStarted(roomId, managed) || managed.game.currentTurn !== seat) continue;
+              const beforeCompletedTricks = managed.game.trick.completedTricks;
+              const hand = managed.game.hands[seat] ?? [];
+              let played = false;
+              for (const cardIds of robotCandidateCardIds(hand)) {
+                try {
+                  const next = runtime.rooms.play(roomId, seat, cardIds);
+                  await runtime.websocket.broadcastGameState(next);
+                  played = true;
+                  break;
+                } catch {}
+              }
+              if (!played) {
+                managed = runtime.rooms.get(roomId);
+                if (managed.game.phase !== "playing") return;
+                if (managed.game.trick.leadingPlay === null) throw new Error("robot has no legal opening play");
+                const next = runtime.rooms.pass(roomId, seat);
+                await runtime.websocket.broadcastGameState(next);
+              }
+              if (await clearRobotWonTrick(runtime, roomId, beforeCompletedTricks)) continue;
+            }
+          };
+'''
+          p.write_text(s[:start] + replacement + s[end:])
           PY
+      - name: Format backend
+        working-directory: yihua-game
+        run: |
+          npm ci
+          npx prettier --write src/core/legacy-guandan-gateway.ts
       - name: Commit backend fix
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add yihua-game/src/core/legacy-guandan-gateway.ts
-          git commit -m 'fix(cleanroom): keep start gate open for whole game'
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'fix(cleanroom): robot combinations and auto-clear robot wins'
           git push origin HEAD:cleanroom/yihua-game-20260826
       - uses: actions/setup-node@v4
         with:
@@ -51,6 +163,5 @@ jobs:
         continue-on-error: true
         working-directory: yihua-game
         run: |
-          npm ci
           npm run typecheck
           npm test
