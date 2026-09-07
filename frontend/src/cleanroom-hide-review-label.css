@@ -1,0 +1,5 @@
+/* Clean-room only: remove the redundant review-panel label under the action buttons. */
+html body .guandan-table:has(.guandan-public-zone)
+  .guandan-private-zone > section.guandan-play-actions::before {
+  content: "" !important;
+}
