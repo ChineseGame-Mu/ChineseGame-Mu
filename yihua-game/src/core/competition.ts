@@ -28,7 +28,10 @@ export interface TributePlan {
 
 export const initialTeamLevels = (): TeamLevels => ({ A: "2", B: "2" });
 
-const advanceRank = (rank: Rank, steps: number): { rank: Rank; passedA: boolean } => {
+const advanceRank = (
+  rank: Rank,
+  steps: number,
+): { rank: Rank; passedA: boolean } => {
   const index = RANKS.indexOf(rank);
   const next = index + steps;
   if (next > RANKS.indexOf("A")) return { rank: "A", passedA: true };
@@ -39,16 +42,29 @@ export const promotionForPlacements = (
   placements: readonly RoundPlacement[],
   levels: TeamLevels,
 ): PromotionResult => {
-  if (placements.length !== 4) throw new Error("competitive promotion requires four placements");
+  if (placements.length !== 4) {
+    throw new Error("competitive promotion requires four placements");
+  }
   const winner = placements[0]!.team;
-  const partnerPlace = placements.find((placement) => placement.team === winner && placement.place !== 1)?.place;
+  const partnerPlace = placements.find(
+    (placement) => placement.team === winner && placement.place !== 1,
+  )?.place;
   const steps: 1 | 2 | 3 = partnerPlace === 2 ? 3 : partnerPlace === 3 ? 2 : 1;
   const before = levels[winner];
   const advanced = advanceRank(before, steps);
-  return { team: winner, steps, before, after: advanced.rank, passedA: advanced.passedA };
+  return {
+    team: winner,
+    steps,
+    before,
+    after: advanced.rank,
+    passedA: advanced.passedA,
+  };
 };
 
-export const applyPromotion = (levels: TeamLevels, result: PromotionResult): TeamLevels => ({
+export const applyPromotion = (
+  levels: TeamLevels,
+  result: PromotionResult,
+): TeamLevels => ({
   ...levels,
   [result.team]: result.after,
 });
@@ -68,17 +84,22 @@ export const mandatoryTributeCard = (
 ): DeckCard => {
   const eligible = hand.filter(({ card }) => !isHeartLevel(card, levelRank));
   if (eligible.length === 0) throw new Error("no eligible tribute card");
-  return [...eligible].sort((a, b) => tributeStrength(b.card, levelRank) - tributeStrength(a.card, levelRank))[0]!;
+  return [...eligible].sort(
+    (a, b) => tributeStrength(b.card, levelRank) - tributeStrength(a.card, levelRank),
+  )[0]!;
 };
 
 export const canAntiTribute = (hand: readonly DeckCard[]): boolean =>
-  hand.filter(({ card }) => card.kind === "joker" && card.size === "big").length >= 2;
+  hand.filter(({ card }) => card.kind === "joker" && card.size === "big").length >=
+  2;
 
 export const tributePlanForPlacements = (
   placements: readonly RoundPlacement[],
   hands: readonly (readonly DeckCard[])[],
 ): TributePlan => {
-  if (placements.length !== 4) throw new Error("competitive tribute requires four placements");
+  if (placements.length !== 4) {
+    throw new Error("competitive tribute requires four placements");
+  }
   const first = placements[0]!;
   const second = placements[1]!;
   const third = placements[2]!;
@@ -97,7 +118,10 @@ export const tributePlanForPlacements = (
       ],
     };
   }
-  return { kind: "single", transfers: [{ fromSeat: fourth.seat, toSeat: first.seat }] };
+  return {
+    kind: "single",
+    transfers: [{ fromSeat: fourth.seat, toSeat: first.seat }],
+  };
 };
 
 export const teamForCompetitiveSeat = (seat: number): Team => teamForSeat(seat);
