@@ -13,6 +13,7 @@ jobs:
     env:
       FRONTEND_URL: https://yihua-mu-git-cleanroom-yihua-game-20260826-chinese-game.vercel.app
       WS_URL: wss://card-games-yihua.onrender.com/api/guandan
+      EXPECTED_COMMIT: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,15 +25,28 @@ jobs:
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
 
-      - name: Mandatory live room-selector UI contract
+      - name: Mandatory fixed-link freshness and room-selector UI contract
         run: |
           node --input-type=module <<'NODE'
           import { chromium } from 'playwright';
           const expectedRooms = ['0001','0002','0003','0004'];
+          const expectedCommit = process.env.EXPECTED_COMMIT;
           const browser = await chromium.launch({headless:true});
           const page = await browser.newPage();
-          const response = await page.goto(process.env.FRONTEND_URL, {waitUntil:'networkidle', timeout:60000});
-          if (!response || !response.ok()) throw new Error(`live frontend HTTP ${response?.status()}`);
+
+          let actualCommit = null;
+          for (let attempt = 1; attempt <= 24; attempt++) {
+            const response = await page.goto(process.env.FRONTEND_URL, {waitUntil:'domcontentloaded', timeout:60000});
+            if (!response || !response.ok()) throw new Error(`live frontend HTTP ${response?.status()}`);
+            await page.waitForTimeout(1500);
+            actualCommit = await page.locator('html').getAttribute('data-cleanroom-commit');
+            console.log(JSON.stringify({type:'fixed_link_commit_probe',attempt,expectedCommit,actualCommit,url:page.url()}));
+            if (actualCommit === expectedCommit) break;
+            if (attempt < 24) await page.waitForTimeout(10000);
+          }
+          if (actualCommit !== expectedCommit) {
+            throw new Error(`fixed link is stale: expected ${expectedCommit}, got ${actualCommit}`);
+          }
 
           const selector = page.locator('#cleanroom-room');
           await selector.waitFor({state:'visible', timeout:30000});
@@ -47,16 +61,15 @@ jobs:
           const freeRoomInputs = await page.locator('input#cleanroom-room, input[name="room"], input[name="cleanroomRoom"]').count();
           if (freeRoomInputs !== 0) throw new Error(`free-text room input detected: ${freeRoomInputs}`);
 
-          // Deliberately do not submit a fixed public room here. QA must never leave
-          // UI-QA players or stale state in 0001-0004. Gameplay E2E below uses a
-          // unique throwaway backend room instead.
+          // QA must never submit one of the fixed public rooms. This prevents QA
+          // from leaving players, hands, tricks, or old state in 0001-0004.
           await selector.selectOption('0001');
           await page.locator('#cleanroom-player-name').fill('UI-QA-NONJOIN');
           if (new URL(page.url()).searchParams.get('room') !== null) {
-            throw new Error('UI contract check unexpectedly entered a room');
+            throw new Error('UI contract check unexpectedly entered a fixed room');
           }
 
-          console.log(JSON.stringify({type:'live_ui_gate_pass',frontend:process.env.FRONTEND_URL,roomControl:'select',rooms:options,freeTextRoomInput:false,fixedRoomJoinPerformed:false}));
+          console.log(JSON.stringify({type:'live_ui_gate_pass',frontend:process.env.FRONTEND_URL,expectedCommit,actualCommit,roomControl:'select',rooms:options,freeTextRoomInput:false,fixedRoomJoinPerformed:false}));
           await browser.close();
           NODE
 
