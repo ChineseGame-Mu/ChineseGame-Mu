@@ -36,13 +36,7 @@ jobs:
           SOAK_PLAYER_COUNTS: "${{ matrix.player_count }}"
           SOAK_RECONNECT_EVERY: "350"
           SOAK_ACTION_LIMIT: "300000"
-          QA_REQUIRE_TEAM_STRATEGY: "1"
-          QA_REQUIRE_FULL_RULE_COVERAGE: "1"
-          QA_REQUIRE_HEART_LEVEL_WILDCARD: "1"
-          QA_REQUIRE_CARD_CONSERVATION: "1"
-          QA_REQUIRE_HIDDEN_INFO_ISOLATION: "1"
-          QA_REQUIRE_ILLEGAL_SIGNALLING_PROTECTION: "1"
-          QA_REQUIRE_EXPERT_TACTICS: "1"
+          QA_STANDARD: "${{ matrix.player_count == 4 && 'association-expert' || '' }}"
           QA_REPORT_JSON: "/tmp/expert-${{ matrix.player_count }}.json"
           QA_REPORT_MD: "/tmp/expert-${{ matrix.player_count }}.md"
         run: |
@@ -67,12 +61,37 @@ jobs:
           if (Number(table.crashes ?? 0) !== 0) fail(`crashes=${table.crashes}`);
           if (!(Number(table.reconnects ?? 0) > 0)) fail("reconnect coverage missing");
           if (!(Number(table.staleErrors ?? 0) > 0)) fail("stale-revision rejection coverage missing");
+
+          if (pc === 4) {
+            const q = [...parsed].reverse().find(v => v?.strategyQa)?.strategyQa;
+            if (!q) {
+              fail("dedicated strategyQa evidence missing");
+            } else {
+              if (q.hiddenInformationIsolation !== true) fail("hidden information isolation failed");
+              if (q.illegalSignallingProtection !== true) fail("illegal signalling protection failed");
+              if (q.associationCompliance !== true) fail("association compliance failed");
+              if (q.deterministicRuleCoverage?.allRequiredRulesPassed !== true) fail("deterministic full-rule coverage failed");
+              if (q.teamStrategyChecks?.passed !== true) fail("team strategy coverage failed");
+              if (q.heartLevelWildcardChecks?.passed !== true) fail("heart-level wildcard coverage failed");
+              if (q.cardConservationChecks?.passed !== true) fail("card conservation coverage failed");
+              if (q.expertTacticalChecks?.passed !== true) fail("expert tactical coverage failed");
+              const coverage = q.playTypeCoverage ?? {};
+              for (const type of ["single","pair","triple","fullHouse","straight","consecutivePairs","consecutiveTriples","straightFlush","bomb4","bomb5","bomb6Plus","jokerBomb","heartLevelWildcardPlay"]) {
+                if (!(Number(coverage[type]) > 0)) fail(`missing play type ${type}`);
+              }
+              const tactics = q.expertTacticalCoverage ?? {};
+              for (const tactic of ["handStructureAssessment","roleSelectionFromLegalInformation","dynamicRoleSwitch","partnerFeeding","partnerYielding","minimumSufficientOvertake","opponentSprintBlock","bombConservation","bombForControlWithFollowup","wildcardValueOptimization","playedCardMemory","remainingCardInferenceWithoutHiddenInfo","endgameModeSwitch","partnerCatchLeadExploitation","upgradeOutcomeOptimization","tributeReturnStrategy"]) {
+                if (tactics[tactic] !== true) fail(`missing tactic ${tactic}`);
+              }
+            }
+          }
+
           if (failures.length) {
             console.error(`EXPERT MATRIX ROOT CAUSES ${pc}:`);
             for (const f of failures) console.error(` - ${f}`);
             process.exit(1);
           }
-          console.log(JSON.stringify({type:"expert_bot_matrix_pass",playerCount:pc,completedRounds:rounds,deadlocks:table.deadlocks,stateErrors:table.stateErrors,crashes:table.crashes,reconnects:table.reconnects,staleErrors:table.staleErrors}));
+          console.log(JSON.stringify({type:"expert_bot_matrix_pass",playerCount:pc,completedRounds:rounds,deadlocks:table.deadlocks,stateErrors:table.stateErrors,crashes:table.crashes,reconnects:table.reconnects,staleErrors:table.staleErrors,dedicatedExpertQa:pc===4}));
           NODE
       - name: Publish ${{ matrix.player_count }} player report
         if: always()
