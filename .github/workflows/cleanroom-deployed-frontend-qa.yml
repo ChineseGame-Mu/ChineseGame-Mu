@@ -36,7 +36,7 @@ jobs:
         working-directory: frontend
         run: |
           set -euo pipefail
-          for marker in "加入牌室" "进入牌室" "cleanroomRoom" "card-games-yihua.onrender.com/api/guandan" ".vercel.app" "cr-"; do
+          for marker in "ENTER ROOM" "cleanroom-join-shell" "cleanroomRoom" "card-games-yihua.onrender.com/api/guandan" ".vercel.app" "cr-"; do
             if ! grep -R -q -- "$marker" dist; then
               echo "Missing built runtime marker: $marker" >&2
               exit 1
@@ -53,6 +53,8 @@ jobs:
 
 # This gate runs on every push to the Cleanroom branch so a backend/rule-only commit
 # cannot produce a new READY Vercel deployment without frontend acceptance evidence.
+# Runtime markers are ASCII literals deliberately chosen to survive production minification
+# and Unicode escaping; Chinese UI text is covered by focused React tests instead.
 # It prevents two recurring failures:
 # 1) giving a READY Vercel URL that still serves an older/incorrect frontend bundle;
 # 2) reusing the same backend room namespace across immutable deployments, which can expose stale room occupants/state.
