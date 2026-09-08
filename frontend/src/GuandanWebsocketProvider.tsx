@@ -7,6 +7,8 @@ import type {
   GuandanServerMessage,
 } from "./guandanProtocol";
 
+declare const __CLEANROOM_BUILD_COMMIT__: string;
+
 type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
 interface GuandanWebsocketContextValue {
@@ -31,12 +33,19 @@ interface GuandanWebsocketProviderProps {
 const TEST_WEBSOCKET = "wss://chinesegame-yihua.onrender.com/api/guandan";
 const CLEANROOM_WEBSOCKET = "wss://card-games-yihua.onrender.com/api/guandan";
 
+export const cleanroomBuildCommit = __CLEANROOM_BUILD_COMMIT__;
+
 export const cleanroomDeploymentRoom = (
   visibleRoom: string | null,
   hostname: string,
 ): string | null => {
   const room = visibleRoom?.trim();
   if (!room) return null;
+
+  const commitKey = /^[0-9a-f]{7,40}$/i.test(cleanroomBuildCommit)
+    ? cleanroomBuildCommit.slice(0, 12).toLowerCase()
+    : null;
+  if (commitKey !== null) return `cr-${commitKey}-${room}`;
 
   const normalizedHost = hostname.trim().toLowerCase();
   if (!normalizedHost.endsWith(".vercel.app")) return room;
@@ -109,6 +118,7 @@ const GuandanWebsocketProvider: React.FunctionComponent<
   const sequenceRef = React.useRef(0);
 
   React.useEffect(() => {
+    document.documentElement.dataset.cleanroomCommit = cleanroomBuildCommit;
     mountedRef.current = true;
 
     const clearQueuedMessages = (): void => {
@@ -125,6 +135,7 @@ const GuandanWebsocketProvider: React.FunctionComponent<
       if (!mountedRef.current) return;
       const next = messageQueueRef.current[messageQueueIndexRef.current];
       if (next === undefined) return;
+      messageQueueRef.current += 1 as any;
       messageQueueIndexRef.current += 1;
       sequenceRef.current += 1;
       setDelivery({ message: next, sequence: sequenceRef.current });
@@ -215,6 +226,7 @@ const GuandanWebsocketProvider: React.FunctionComponent<
 
     return () => {
       mountedRef.current = false;
+      delete document.documentElement.dataset.cleanroomCommit;
       if (reconnectTimerRef.current !== null) {
         window.clearTimeout(reconnectTimerRef.current);
       }
