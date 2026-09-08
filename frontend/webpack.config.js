@@ -1,10 +1,13 @@
 const path = require("path");
+const webpack = require("webpack");
 const TerserJsPlugin = require("terser-webpack-plugin");
 const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
+
+const cleanroomBuildCommit = process.env.VERCEL_GIT_COMMIT_SHA || "local";
 
 module.exports = {
   mode: "production",
@@ -62,6 +65,9 @@ module.exports = {
     hints: false,
   },
   plugins: [
+    new webpack.DefinePlugin({
+      __CLEANROOM_BUILD_COMMIT__: JSON.stringify(cleanroomBuildCommit),
+    }),
     new WasmPackPlugin({
       crateDirectory: path.resolve(__dirname, "shengji-wasm"),
       outName: "shengji-core",
