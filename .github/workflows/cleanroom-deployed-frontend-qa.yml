@@ -1,0 +1,51 @@
+name: Cleanroom Deployed Frontend QA
+
+on:
+  push:
+    branches:
+      - cleanroom/yihua-game-20260826
+    paths:
+      - ".github/workflows/cleanroom-deployed-frontend-qa.yml"
+      - "frontend/src/**"
+      - "frontend/scripts/verify-cleanroom-deployment.mjs"
+  workflow_dispatch:
+
+jobs:
+  deployed-frontend-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Frontend build and focused acceptance
+        working-directory: frontend
+        run: |
+          set -euo pipefail
+          npm install
+          npm test -- --runInBand GuandanWebsocketProvider.test.tsx GuandanRoundResultHud.test.tsx
+          npm run build
+
+      - name: Built bundle must contain current Cleanroom entry markers
+        working-directory: frontend
+        run: |
+          set -euo pipefail
+          grep -R -q "加入牌室" dist
+          grep -R -q "进入牌室" dist
+          grep -R -q "cleanroomRoom" dist
+          grep -R -q "cleanroomDeploymentRoom" dist
+          grep -R -q "card-games-yihua.onrender.com/api/guandan" dist
+
+      - name: Latest branch deployment must serve current Cleanroom bundle
+        working-directory: frontend
+        env:
+          CLEANROOM_DEPLOYMENT_URL: "https://yihua-mu-git-cleanroom-yihua-game-20260826-chinese-game.vercel.app/"
+          CLEANROOM_DEPLOYMENT_RETRIES: "30"
+          CLEANROOM_DEPLOYMENT_DELAY_MS: "10000"
+        run: node scripts/verify-cleanroom-deployment.mjs
+
+# This gate prevents two recurring failures:
+# 1) giving a READY Vercel URL that still serves an older/incorrect frontend bundle;
+# 2) reusing the same backend room namespace across immutable deployments, which can expose stale room occupants/state.
