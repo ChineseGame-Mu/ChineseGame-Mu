@@ -1,6 +1,8 @@
 import * as React from "react";
 import type { JSX } from "react";
-import GuandanWebsocketProvider from "./GuandanWebsocketProvider";
+import GuandanWebsocketProvider, {
+  cleanroomBuildCommit,
+} from "./GuandanWebsocketProvider";
 import GuandanStateProvider, {
   GuandanStateContext,
 } from "./GuandanStateProvider";
@@ -128,6 +130,13 @@ const CleanroomEntry = (): JSX.Element => {
   const [playerCount, setPlayerCount] = React.useState<number>(initialCount);
   const [name, setName] = React.useState(initial.get("playerName") ?? "");
   const [joined, setJoined] = React.useState(false);
+
+  React.useEffect(() => {
+    document.documentElement.dataset.cleanroomCommit = cleanroomBuildCommit;
+    return () => {
+      delete document.documentElement.dataset.cleanroomCommit;
+    };
+  }, []);
 
   if (joined) return <CleanroomTable />;
 
