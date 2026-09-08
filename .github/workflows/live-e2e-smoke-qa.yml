@@ -11,7 +11,6 @@ jobs:
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -44,87 +43,94 @@ jobs:
               this.ws.addEventListener('message', e => {
                 const m = JSON.parse(String(e.data));
                 this.messages.push(m);
-                for (const w of [...this.waiters]) if (w.pred(m)) { this.waiters.splice(this.waiters.indexOf(w),1); w.resolve(m); }
+                console.log(JSON.stringify({client:this.name,recv:m.type,seat:m.seat ?? null,message:m.message ?? null}));
+                for (const w of [...this.waiters]) {
+                  if (this.messages.length > w.after && w.pred(m)) {
+                    this.waiters.splice(this.waiters.indexOf(w),1); w.resolve(m);
+                  }
+                }
               });
               await Promise.race([
                 new Promise((resolve,reject)=>{this.ws.addEventListener('open',resolve,{once:true});this.ws.addEventListener('error',()=>reject(new Error('websocket open error')),{once:true});}),
                 timeout(15000,'websocket open')
               ]);
-              const connected = await this.wait(m=>m.type==='connected',15000);
-              if (!connected.protocol) throw new Error('connected message missing protocol');
-              return connected;
+              return await this.waitNew(m=>m.type==='connected',0,15000);
             }
-            send(m){ if (!this.ws || this.ws.readyState !== WebSocket.OPEN) throw new Error(`${this.name}: socket not open`); this.ws.send(JSON.stringify(m)); }
-            wait(pred, ms=15000){
-              const existing = this.messages.find(pred); if (existing) return Promise.resolve(existing);
-              return Promise.race([new Promise(resolve=>this.waiters.push({pred,resolve})),timeout(ms,`${this.name} message`)]);
+            send(m){
+              if (!this.ws || this.ws.readyState !== WebSocket.OPEN) throw new Error(`${this.name}: socket not open`);
+              console.log(JSON.stringify({client:this.name,send:m.type}));
+              this.ws.send(JSON.stringify(m));
+            }
+            waitNew(pred, after=this.messages.length, ms=15000){
+              for (let i=after;i<this.messages.length;i++) if (pred(this.messages[i])) return Promise.resolve(this.messages[i]);
+              return Promise.race([new Promise(resolve=>this.waiters.push({pred,resolve,after})),timeout(ms,`${this.name} message`)]);
             }
             close(){ try{ this.ws?.close(); }catch{} }
           }
 
           const clients = Array.from({length:4},(_,i)=>new Client(`E2E-${i+1}-${room.slice(-6)}`));
           const protocols=[];
-          for (const c of clients) protocols.push((await c.connect()).protocol);
+          for (const c of clients) {
+            const connected = await c.connect();
+            if (!connected.protocol) throw new Error('connected message missing protocol');
+            protocols.push(connected.protocol);
+          }
           if (new Set(protocols).size !== 1) throw new Error(`protocol mismatch ${protocols}`);
 
-          for (const c of clients) {
-            c.send({type:'join',room,name:c.name});
-            const joined = await c.wait(m=>m.type==='joined');
+          for (let i=0;i<clients.length;i++) {
+            const c=clients[i]; const before=c.messages.length;
+            c.send({type:'join',room,name:c.name,player_count:4,desired_seat:i});
+            const joined = await c.waitNew(m=>m.type==='joined',before,15000);
             c.seat = joined.seat;
-            if (joined.room !== room) throw new Error(`${c.name}: joined wrong room`);
+            if (joined.room !== room || joined.seat !== i) throw new Error(`${c.name}: join mismatch ${JSON.stringify(joined)}`);
           }
           const seats = clients.map(c=>c.seat);
-          if (new Set(seats).size !== 4 || seats.some(s=>s===null)) throw new Error(`bad seats ${JSON.stringify(seats)}`);
 
+          const starts = clients.map(c=>c.messages.length);
           clients[0].send({type:'start',player_count:4});
-          for (const c of clients) {
-            const started = await c.wait(m=>m.type==='started' && m.player_count===4,20000);
+          for (let i=0;i<clients.length;i++) {
+            const c=clients[i];
+            const started = await c.waitNew(m=>m.type==='started' && m.player_count===4,starts[i],20000);
             if (started.cards_per_player !== 27) throw new Error(`unexpected cards_per_player ${started.cards_per_player}`);
-            const hand = await c.wait(m=>m.type==='hand',20000);
+            const hand = await c.waitNew(m=>m.type==='hand',starts[i],20000);
             if (!Array.isArray(hand.cards) || hand.cards.length !== 27) throw new Error(`${c.name}: hand count ${hand.cards?.length}`);
           }
 
-          let state = await clients[0].wait(m=>m.type==='state' && Number.isInteger(m.turn),20000);
+          const stateStart = clients[0].messages.length;
+          let state = clients.flatMap(c=>c.messages).filter(m=>m.type==='state').at(-1);
+          if (!state || !Number.isInteger(state.turn)) state = await clients[0].waitNew(m=>m.type==='state' && Number.isInteger(m.turn),stateStart,20000);
           const seatToClient = new Map(clients.map(c=>[c.seat,c]));
           const leader = seatToClient.get(state.turn);
           if (!leader) throw new Error(`no client for turn ${state.turn}`);
+          let mark=leader.messages.length;
           leader.send({type:'play',card_indexes:[0]});
-          state = await leader.wait(m=>m.type==='state' && m.hand_counts?.[leader.seat]===26,20000);
+          state = await leader.waitNew(m=>m.type==='state' && m.hand_counts?.[leader.seat]===26,mark,20000);
 
           let passes=0;
-          while (passes < 3) {
+          while (passes < 3 && !state.trick_complete) {
             const active = seatToClient.get(state.turn);
             if (!active) throw new Error(`no active client for turn ${state.turn}`);
+            mark=active.messages.length;
             active.send({type:'pass'});
-            state = await active.wait(m=>m.type==='state' && (m.trick_complete===true || m.turn!==active.seat),20000);
+            state = await active.waitNew(m=>m.type==='state' && (m.trick_complete===true || m.turn!==active.seat),mark,20000);
             passes++;
-            if (state.trick_complete) break;
           }
-          if (!state.trick_complete) {
-            const latest = clients.flatMap(c=>c.messages).filter(m=>m.type==='state').at(-1);
-            if (!latest?.trick_complete) throw new Error('trick did not complete after lead + passes');
-            state = latest;
-          }
+          if (!state.trick_complete) throw new Error('trick did not complete after lead + passes');
 
           const reconnectTarget = clients[2];
           reconnectTarget.close();
-          await new Promise(r=>setTimeout(r,500));
+          await new Promise(r=>setTimeout(r,700));
           const replacement = new Client(reconnectTarget.name);
           const rc = await replacement.connect();
-          replacement.send({type:'join',room,name:replacement.name});
-          const rejoined = await replacement.wait(m=>m.type==='joined',20000);
-          const rehand = await replacement.wait(m=>m.type==='hand',20000);
-          const restate = await replacement.wait(m=>m.type==='state',20000);
+          mark=replacement.messages.length;
+          replacement.send({type:'join',room,name:replacement.name,player_count:4,desired_seat:reconnectTarget.seat});
+          const rejoined = await replacement.waitNew(m=>m.type==='joined',mark,20000);
+          const rehand = await replacement.waitNew(m=>m.type==='hand',mark,20000);
+          const restate = await replacement.waitNew(m=>m.type==='state',mark,20000);
           if (rejoined.seat !== reconnectTarget.seat) throw new Error(`reconnect seat changed ${reconnectTarget.seat}->${rejoined.seat}`);
           if (!Array.isArray(rehand.cards)) throw new Error('reconnect missing private hand');
           if (!Array.isArray(restate.hand_counts) || restate.hand_counts.length !== 4) throw new Error('reconnect state snapshot invalid');
 
-          console.log(JSON.stringify({
-            type:'live_e2e_pass', room, ws:WS_URL, protocol:rc.protocol,
-            seats, started:true, cardsPerPlayer:27, leadPlay:true,
-            passes, trickComplete:true, reconnect:true,
-            reconnectSeat:rejoined.seat, reconnectHandCount:rehand.cards.length,
-            handCounts:restate.hand_counts
-          }));
+          console.log(JSON.stringify({type:'live_e2e_pass',room,ws:WS_URL,protocol:rc.protocol,seats,started:true,cardsPerPlayer:27,leadPlay:true,passes,trickComplete:true,reconnect:true,reconnectSeat:rejoined.seat,reconnectHandCount:rehand.cards.length,handCounts:restate.hand_counts}));
           for (const c of clients) c.close(); replacement.close();
           NODE
