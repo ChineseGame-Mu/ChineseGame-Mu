@@ -96,9 +96,15 @@ jobs:
             if (!Array.isArray(hand.cards) || hand.cards.length !== 27) throw new Error(`${c.name}: hand count ${hand.cards?.length}`);
           }
 
-          const stateStart = clients[0].messages.length;
           let state = clients.flatMap(c=>c.messages).filter(m=>m.type==='state').at(-1);
-          if (!state || !Number.isInteger(state.turn)) state = await clients[0].waitNew(m=>m.type==='state' && Number.isInteger(m.turn),stateStart,20000);
+          if (!state || !Number.isInteger(state.turn)) throw new Error('initial state missing turn');
+          const trickMarks = clients.map(c=>c.messages.length);
+          clients[0].send({type:'start_trick'});
+          for (let i=0;i<clients.length;i++) {
+            await clients[i].waitNew(m=>m.type==='state' && Number.isInteger(m.turn),trickMarks[i],15000);
+          }
+          state = clients.flatMap(c=>c.messages).filter(m=>m.type==='state').at(-1);
+
           const seatToClient = new Map(clients.map(c=>[c.seat,c]));
           const leader = seatToClient.get(state.turn);
           if (!leader) throw new Error(`no client for turn ${state.turn}`);
@@ -131,6 +137,6 @@ jobs:
           if (!Array.isArray(rehand.cards)) throw new Error('reconnect missing private hand');
           if (!Array.isArray(restate.hand_counts) || restate.hand_counts.length !== 4) throw new Error('reconnect state snapshot invalid');
 
-          console.log(JSON.stringify({type:'live_e2e_pass',room,ws:WS_URL,protocol:rc.protocol,seats,started:true,cardsPerPlayer:27,leadPlay:true,passes,trickComplete:true,reconnect:true,reconnectSeat:rejoined.seat,reconnectHandCount:rehand.cards.length,handCounts:restate.hand_counts}));
+          console.log(JSON.stringify({type:'live_e2e_pass',room,ws:WS_URL,protocol:rc.protocol,seats,started:true,cardsPerPlayer:27,startTrick:true,leadPlay:true,passes,trickComplete:true,reconnect:true,reconnectSeat:rejoined.seat,reconnectHandCount:rehand.cards.length,handCounts:restate.hand_counts}));
           for (const c of clients) c.close(); replacement.close();
           NODE
