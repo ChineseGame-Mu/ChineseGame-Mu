@@ -31,6 +31,24 @@ interface GuandanWebsocketProviderProps {
 const TEST_WEBSOCKET = "wss://chinesegame-yihua.onrender.com/api/guandan";
 const CLEANROOM_WEBSOCKET = "wss://card-games-yihua.onrender.com/api/guandan";
 
+export const cleanroomDeploymentRoom = (
+  visibleRoom: string | null,
+  hostname: string,
+): string | null => {
+  const room = visibleRoom?.trim();
+  if (!room) return null;
+
+  const normalizedHost = hostname.trim().toLowerCase();
+  if (!normalizedHost.endsWith(".vercel.app")) return room;
+
+  const firstLabel = normalizedHost.split(".")[0] ?? "";
+  const immutableMatch = firstLabel.match(/-([a-z0-9]{8,16})$/);
+  const deploymentKey = immutableMatch?.[1] ?? firstLabel.slice(-16);
+  if (!deploymentKey) return room;
+
+  return `cr-${deploymentKey}-${room}`;
+};
+
 const cleanroomWebsocketOverride = (): string | null => {
   const query = new URLSearchParams(window.location.search);
   if (query.get("cleanroom") !== "1") return null;
@@ -212,9 +230,14 @@ const GuandanWebsocketProvider: React.FunctionComponent<
     const query = new URLSearchParams(window.location.search);
     const playerCount = Number(query.get("players") ?? "4");
     const desiredSeat = Number(query.get("seat"));
+    const cleanroom = query.get("cleanroom") === "1";
+    const visibleRoom = query.get("cleanroomRoom");
+    const wireRoom = cleanroom
+      ? cleanroomDeploymentRoom(visibleRoom, window.location.hostname)
+      : visibleRoom;
     const adapted = adaptGuandanClientMessage(message, {
-      cleanroom: query.get("cleanroom") === "1",
-      room: query.get("cleanroomRoom"),
+      cleanroom,
+      room: wireRoom,
       playerCount: Number.isFinite(playerCount) ? playerCount : 4,
       desiredSeat:
         query.has("seat") && Number.isInteger(desiredSeat) ? desiredSeat : null,
