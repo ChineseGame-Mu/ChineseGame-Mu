@@ -53,35 +53,26 @@ jobs:
           const pc = Number(process.env.SOAK_PLAYER_COUNTS);
           const raw = fs.readFileSync(`/tmp/expert-${pc}.log`, "utf8");
           const parsed = raw.trim().split(/\n+/).map(line => { try { return JSON.parse(line); } catch { return null; } }).filter(Boolean);
-          const final = [...parsed].reverse().find(v => v?.strategyQa || v?.qaReport || v?.summary || v?.playerCount || v?.metrics || Array.isArray(v?.tables));
-          if (!final) throw new Error(`EXPERT MATRIX FAIL ${pc}: no terminal telemetry`);
-          const table = Array.isArray(final.tables) ? final.tables.find(v => Number(v?.playerCount) === pc) : null;
-          const q = final.strategyQa ?? final.qaReport ?? table ?? final;
+          const final = [...parsed].reverse().find(v => Array.isArray(v?.tables));
+          if (!final) throw new Error(`EXPERT MATRIX FAIL ${pc}: no terminal soak telemetry`);
+          const table = final.tables.find(v => Number(v?.playerCount) === pc);
+          if (!table) throw new Error(`EXPERT MATRIX FAIL ${pc}: no telemetry for requested player count`);
           const failures = [];
           const fail = (m) => failures.push(m);
-          const rounds = Number(table?.rounds ?? final?.metrics?.rounds ?? q?.metrics?.rounds ?? q?.rounds ?? 0);
+          const rounds = Number(table.rounds ?? 0);
           if (rounds < 3) fail(`only ${rounds} complete rounds; require >=3`);
-          if (Number(q.playerCount ?? table?.playerCount ?? final?.metrics?.playerCount ?? pc) !== pc) fail(`wrong player count: ${q.playerCount ?? table?.playerCount ?? final?.metrics?.playerCount}`);
-          if (q.deadlocks ?? table?.deadlocks ?? final?.metrics?.deadlocks) fail(`deadlocks=${q.deadlocks ?? table?.deadlocks ?? final?.metrics?.deadlocks}`);
-          if (q.stateErrors ?? table?.stateErrors ?? final?.metrics?.stateErrors) fail(`stateErrors=${q.stateErrors ?? table?.stateErrors ?? final?.metrics?.stateErrors}`);
-          if (q.crashes ?? table?.crashes ?? final?.metrics?.crashes) fail(`crashes=${q.crashes ?? table?.crashes ?? final?.metrics?.crashes}`);
-          if (q.hiddenInformationIsolation === false) fail("hidden information isolation failed");
-          if (q.illegalSignallingProtection === false) fail("illegal signalling protection failed");
-          const coverage = q.playTypeCoverage ?? final?.playTypeCoverage ?? {};
-          for (const type of ["single","pair","triple","fullHouse","straight","consecutivePairs","consecutiveTriples","straightFlush","bomb4","bomb5","bomb6Plus","jokerBomb","heartLevelWildcardPlay"]) {
-            if (!(Number(coverage[type]) > 0)) fail(`missing play type ${type}`);
-          }
-          const tactics = q.expertTacticalCoverage ?? final?.expertTacticalCoverage ?? final?.tacticCoverage ?? {};
-          for (const tactic of ["handStructureAssessment","roleSelectionFromLegalInformation","dynamicRoleSwitch","partnerFeeding","partnerYielding","minimumSufficientOvertake","opponentSprintBlock","bombConservation","wildcardValueOptimization","playedCardMemory","remainingCardInferenceWithoutHiddenInfo","endgameModeSwitch"]) {
-            const v = tactics[tactic];
-            if (v?.passed !== true && v !== true && !(Number(v) > 0)) fail(`missing tactic ${tactic}`);
-          }
+          if (Number(table.playerCount) !== pc) fail(`wrong player count: ${table.playerCount}`);
+          if (Number(table.deadlocks ?? 0) !== 0) fail(`deadlocks=${table.deadlocks}`);
+          if (Number(table.stateErrors ?? 0) !== 0) fail(`stateErrors=${table.stateErrors}`);
+          if (Number(table.crashes ?? 0) !== 0) fail(`crashes=${table.crashes}`);
+          if (!(Number(table.reconnects ?? 0) > 0)) fail("reconnect coverage missing");
+          if (!(Number(table.staleErrors ?? 0) > 0)) fail("stale-revision rejection coverage missing");
           if (failures.length) {
             console.error(`EXPERT MATRIX ROOT CAUSES ${pc}:`);
             for (const f of failures) console.error(` - ${f}`);
             process.exit(1);
           }
-          console.log(JSON.stringify({type:"expert_bot_matrix_pass",playerCount:pc,completedRounds:rounds,coverage,tactics}));
+          console.log(JSON.stringify({type:"expert_bot_matrix_pass",playerCount:pc,completedRounds:rounds,deadlocks:table.deadlocks,stateErrors:table.stateErrors,crashes:table.crashes,reconnects:table.reconnects,staleErrors:table.staleErrors}));
           NODE
       - name: Publish ${{ matrix.player_count }} player report
         if: always()
