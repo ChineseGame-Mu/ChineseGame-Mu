@@ -1,0 +1,79 @@
+name: Cleanroom Mandatory Pre-Use Release Gate
+
+on:
+  push:
+    branches:
+      - cleanroom/yihua-game-20260826
+  workflow_dispatch:
+
+jobs:
+  preuse-release-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      STALE_MANUAL_URL: https://yihua-2ah5da0zg-chinese-game.vercel.app
+      STALE_MANUAL_SHA: 71c58ed698d5bde1c56c907b8df468f65e8560ea
+      LIVE_BRANCH_URL: https://yihua-mu-git-cleanroom-yihua-game-20260826-chinese-game.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Mandatory current-commit freshness policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Current GitHub SHA: $GITHUB_SHA"
+          if [ "$GITHUB_SHA" = "$STALE_MANUAL_SHA" ]; then
+            echo "::error::Current SHA is the known stale manual deployment SHA."
+            exit 1
+          fi
+          echo "::notice::The old immutable manual URL $STALE_MANUAL_URL is forbidden for release/use after newer commits."
+          echo "::notice::A manual immutable Vercel URL may be released only after its Vercel githubCommitSha is verified equal to this exact GITHUB_SHA."
+
+      - name: Mandatory fixed-room source contract and deployment isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          ENTRY=frontend/src/CleanroomEntry.tsx
+          WS=frontend/src/GuandanWebsocketProvider.tsx
+          test -f "$ENTRY"
+          test -f "$WS"
+          grep -F 'const selectableRooms = ["0001", "0002", "0003", "0004"] as const;' "$ENTRY"
+          grep -F '<select' "$ENTRY"
+          grep -F 'id="cleanroom-room"' "$ENTRY"
+          if grep -E 'input[^>]+(name="room"|name="cleanroomRoom"|id="cleanroom-room")' "$ENTRY"; then
+            echo "::error::Free-text fixed-room input is forbidden."
+            exit 1
+          fi
+          grep -F 'cleanroomDeploymentRoom' "$WS"
+          grep -F 'return `cr-${deploymentKey}-${room}`;' "$WS"
+          echo "::notice::0001-0004 remain deployment-scoped; a new immutable deployment uses a different backend room namespace from the stale deployment."
+
+      - name: Mandatory no-old-room-data QA policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          WF=.github/workflows/cleanroom-live-ui-e2e-gate.yml
+          test -f "$WF"
+          grep -F 'fixedRoomJoinPerformed:false' "$WF"
+          grep -F 'fixedRoomsTouched:false' "$WF"
+          grep -F 'unique throwaway backend room' "$WF"
+          if grep -F "send({type:'join',room:'0001'" "$WF"; then
+            echo "::error::QA must never join fixed public room 0001."
+            exit 1
+          fi
+          echo "::notice::QA is forbidden from joining 0001-0004; gameplay E2E must use a disposable room so QA cannot leave old players, old hands or old match state in public rooms."
+
+      - name: Mandatory live branch smoke before release
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -L -sS -o /tmp/live.html -w '%{http_code}' "$LIVE_BRANCH_URL" || true)
+            if [ "$code" = "200" ] && [ "$(wc -c </tmp/live.html)" -gt 500 ]; then
+              echo "Live branch frontend reachable: HTTP $code"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::Latest branch frontend did not become healthy before release gate timeout."
+          exit 1
