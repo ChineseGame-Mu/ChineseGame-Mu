@@ -26,16 +26,20 @@ const inspect = async () => {
   }
   const joined = bundleTexts.join("\n");
 
+  // Check only runtime strings that survive minification. Function identifiers such as
+  // cleanroomDeploymentRoom are intentionally not used as deployment markers because
+  // production minifiers are free to rename/remove them.
   const requiredMarkers = [
     "加入牌室",
     "进入牌室",
     "cleanroomRoom",
     "card-games-yihua.onrender.com/api/guandan",
-    "cleanroomDeploymentRoom",
+    ".vercel.app",
+    "cr-",
   ];
   const missing = requiredMarkers.filter((marker) => !joined.includes(marker));
   if (missing.length) {
-    throw new Error(`deployed bundle is not the current cleanroom frontend; missing markers: ${missing.join(", ")}`);
+    throw new Error(`deployed bundle is not the current cleanroom frontend; missing runtime markers: ${missing.join(", ")}`);
   }
 
   const mainBundle = scripts.find((src) => /main\.[a-f0-9]+\.js/.test(src)) ?? scripts.at(-1);
