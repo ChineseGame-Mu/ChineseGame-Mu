@@ -135,7 +135,6 @@ const GuandanWebsocketProvider: React.FunctionComponent<
       if (!mountedRef.current) return;
       const next = messageQueueRef.current[messageQueueIndexRef.current];
       if (next === undefined) return;
-      messageQueueRef.current += 1 as any;
       messageQueueIndexRef.current += 1;
       sequenceRef.current += 1;
       setDelivery({ message: next, sequence: sequenceRef.current });
