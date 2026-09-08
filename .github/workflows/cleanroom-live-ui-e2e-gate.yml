@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     env:
-      FRONTEND_URL: https://yihua-2ah5da0zg-chinese-game.vercel.app
+      FRONTEND_URL: https://yihua-mu-git-cleanroom-yihua-game-20260826-chinese-game.vercel.app
       WS_URL: wss://card-games-yihua.onrender.com/api/guandan
     steps:
       - uses: actions/checkout@v4
@@ -47,19 +47,20 @@ jobs:
           const freeRoomInputs = await page.locator('input#cleanroom-room, input[name="room"], input[name="cleanroomRoom"]').count();
           if (freeRoomInputs !== 0) throw new Error(`free-text room input detected: ${freeRoomInputs}`);
 
+          // Deliberately do not submit a fixed public room here. QA must never leave
+          // UI-QA players or stale state in 0001-0004. Gameplay E2E below uses a
+          // unique throwaway backend room instead.
           await selector.selectOption('0001');
-          await page.locator('#cleanroom-player-name').fill('UI-QA');
-          await page.getByRole('button', {name:/进入牌室|ENTER ROOM/}).click();
-          await page.waitForFunction(() => new URL(location.href).searchParams.get('room') === '0001', null, {timeout:15000});
-          const url = new URL(page.url());
-          if (url.searchParams.get('cleanroom') !== '1') throw new Error('entry did not enable cleanroom mode');
-          if (url.searchParams.get('cleanroomRoom') !== '0001') throw new Error('visible room not preserved as 0001');
+          await page.locator('#cleanroom-player-name').fill('UI-QA-NONJOIN');
+          if (new URL(page.url()).searchParams.get('room') !== null) {
+            throw new Error('UI contract check unexpectedly entered a room');
+          }
 
-          console.log(JSON.stringify({type:'live_ui_gate_pass',frontend:process.env.FRONTEND_URL,roomControl:'select',rooms:options,freeTextRoomInput:false,enteredRoom:'0001'}));
+          console.log(JSON.stringify({type:'live_ui_gate_pass',frontend:process.env.FRONTEND_URL,roomControl:'select',rooms:options,freeTextRoomInput:false,fixedRoomJoinPerformed:false}));
           await browser.close();
           NODE
 
-      - name: Real live WebSocket gameplay E2E
+      - name: Real live WebSocket gameplay E2E in disposable room
         run: |
           node --input-type=module <<'NODE'
           const WS_URL = process.env.WS_URL;
@@ -156,7 +157,7 @@ jobs:
           if (!Array.isArray(rehand.cards)) throw new Error('reconnect private hand missing');
           if (!Array.isArray(restate.hand_counts) || restate.hand_counts.length!==4) throw new Error('reconnect state invalid');
 
-          console.log(JSON.stringify({type:'live_e2e_pass',room,protocol:connected.protocol,started:true,cardsPerPlayer:27,leadPlay:true,passes,trickComplete:true,reconnect:true,reconnectSeat:rejoined.seat,reconnectHandCount:rehand.cards.length}));
+          console.log(JSON.stringify({type:'live_e2e_pass',room,protocol:connected.protocol,started:true,cardsPerPlayer:27,leadPlay:true,passes,trickComplete:true,reconnect:true,reconnectSeat:rejoined.seat,reconnectHandCount:rehand.cards.length,fixedRoomsTouched:false}));
           for (const c of clients) c.close();
           replacement.close();
           NODE
