@@ -26,12 +26,11 @@ const inspect = async () => {
   }
   const joined = bundleTexts.join("\n");
 
-  // Check only runtime strings that survive minification. Function identifiers such as
-  // cleanroomDeploymentRoom are intentionally not used as deployment markers because
-  // production minifiers are free to rename/remove them.
+  // Use ASCII runtime literals that survive production minification and Unicode escaping.
+  // Chinese UI wording is validated in focused React tests, not by byte-grepping minified JS.
   const requiredMarkers = [
-    "加入牌室",
-    "进入牌室",
+    "ENTER ROOM",
+    "cleanroom-join-shell",
     "cleanroomRoom",
     "card-games-yihua.onrender.com/api/guandan",
     ".vercel.app",
