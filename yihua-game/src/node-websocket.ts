@@ -140,6 +140,16 @@ export class NodeWebSocketConnection implements UpgradedConnection, TextSocket {
     readonly context: ConnectionContext,
   ) {
     rawSocket.on("drain", () => this.flushPendingFrames());
+    // Browser tabs, mobile networks, proxies, and test clients may reset a TCP
+    // connection without completing a WebSocket close handshake. Node treats an
+    // unobserved Socket "error" event (for example ECONNRESET/EPIPE) as fatal to
+    // the entire process, so consume transport errors here and let the normal
+    // "close" event perform connection cleanup.
+    rawSocket.on("error", () => {
+      this.pendingFrames = [];
+      this.pendingBytes = 0;
+      this.writeBlocked = false;
+    });
     rawSocket.once("close", () => {
       this.pendingFrames = [];
       this.pendingBytes = 0;
