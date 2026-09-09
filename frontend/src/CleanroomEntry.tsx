@@ -14,7 +14,6 @@ import cleanroomLobbyFinalImage from "./cleanroom-lobby-final-image";
 import "./cleanroom-hand-stack-fix.css";
 import "./cleanroom-initial-draw-position.css";
 import "./cleanroom-lobby-artwork.css";
-import "./cleanroom-lobby-polish.css";
 import "./cleanroom-device-layout.css";
 import "./cleanroom-public-player-names.css";
 
