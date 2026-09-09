@@ -1,4 +1,4 @@
-/* Final lobby: approved 1348x1167 artwork is the visual layer; only live controls are overlaid. */
+/* Final lobby: preserve the complete approved artwork on every viewport; only live controls are overlaid. */
 .cleanroom-final-shell {
   width: 100vw;
   min-height: 100svh;
@@ -6,15 +6,16 @@
   padding: 0;
   overflow: hidden;
   background: #e8eee8;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
 }
 
 .cleanroom-final-stage {
   position: relative;
-  left: 50%;
-  width: calc(100svh * 1.1550985433);
-  height: 100svh;
-  min-width: 100vw;
-  transform: translateX(-50%);
+  width: min(100vw, calc(100svh * 1.1550985433));
+  aspect-ratio: 1348 / 1167;
+  flex: 0 0 auto;
   overflow: hidden;
 }
 
@@ -24,10 +25,11 @@
   z-index: 1;
   width: 100%;
   height: 100%;
-  object-fit: fill;
+  object-fit: contain;
   display: block;
   user-select: none;
   -webkit-user-drag: none;
+  image-rendering: auto;
 }
 
 .cleanroom-final-form {
@@ -57,24 +59,11 @@
   padding: 0 1rem !important;
   outline: none !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.5) !important;
-  font-size: clamp(15px, 2.0svh, 21px) !important;
+  font-size: clamp(14px, 1.9svh, 21px) !important;
 }
-
-.cleanroom-final-control:focus {
-  border-color: rgba(165, 125, 57, .75) !important;
-  box-shadow: 0 0 0 2px rgba(202, 165, 91, .16) !important;
-}
-
-.cleanroom-final-room {
-  top: 51.75% !important;
-  height: 3.85% !important;
-}
-
-.cleanroom-final-players {
-  top: 59.05% !important;
-  height: 3.85% !important;
-}
-
+.cleanroom-final-control:focus { border-color: rgba(165,125,57,.75) !important; box-shadow: 0 0 0 2px rgba(202,165,91,.16) !important; }
+.cleanroom-final-room { top: 51.75% !important; height: 3.85% !important; }
+.cleanroom-final-players { top: 59.05% !important; height: 3.85% !important; }
 .cleanroom-final-name {
   top: 69.20% !important;
   height: 4.55% !important;
@@ -84,13 +73,7 @@
   background-position: 1rem 50% !important;
   background-size: 1.45rem 1.45rem !important;
 }
-
-.cleanroom-final-name::placeholder {
-  color: #8f928e !important;
-  opacity: .92 !important;
-}
-
-/* The button artwork already exists in the approved image. Keep the live button as an exact clickable hit-area only, so the reference art remains pixel-faithful. */
+.cleanroom-final-name::placeholder { color:#8f928e !important; opacity:.92 !important; }
 .cleanroom-final-enter {
   left: 30% !important;
   top: 75.40% !important;
@@ -102,36 +85,15 @@
   color: transparent !important;
   box-shadow: none !important;
   display: flex !important;
-  flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  line-height: 1.05 !important;
-  font-size: clamp(17px, 2.5svh, 27px) !important;
-  font-weight: 800 !important;
-  letter-spacing: .08em !important;
   -webkit-tap-highlight-color: transparent;
 }
-
-.cleanroom-final-enter span,
-.cleanroom-final-enter small {
-  color: transparent !important;
-}
-
-.cleanroom-final-enter:focus-visible {
-  outline: 3px solid rgba(191, 149, 66, .72) !important;
-  outline-offset: 2px !important;
-}
-
-.cleanroom-final-enter:disabled {
-  opacity: 1 !important;
-}
+.cleanroom-final-enter span,.cleanroom-final-enter small { color:transparent !important; }
+.cleanroom-final-enter:focus-visible { outline:3px solid rgba(191,149,66,.72) !important; outline-offset:2px !important; }
+.cleanroom-final-enter:disabled { opacity:1 !important; }
 
 @media (orientation: landscape) {
-  .cleanroom-final-stage {
-    width: min(100vw, calc(100svh * 1.1550985433));
-    height: min(100svh, calc(100vw / 1.1550985433));
-    min-width: 0;
-    top: 50svh;
-    transform: translate(-50%, -50%);
-  }
+  .cleanroom-final-shell { align-items:center; }
+  .cleanroom-final-stage { width:min(100vw, calc(100svh * 1.1550985433)); }
 }
