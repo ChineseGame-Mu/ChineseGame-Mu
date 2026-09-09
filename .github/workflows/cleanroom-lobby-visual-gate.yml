@@ -1,0 +1,84 @@
+name: Cleanroom Lobby Visual Gate
+
+on:
+  push:
+    branches:
+      - cleanroom/yihua-game-20260826
+  workflow_dispatch:
+
+jobs:
+  lobby-visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      FRONTEND_URL: https://yihua-mu.vercel.app
+      EXPECTED_COMMIT: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Mandatory iPhone lobby visual geometry
+        run: |
+          node --input-type=module <<'NODE'
+          import { chromium } from 'playwright';
+          const browser = await chromium.launch({headless:true});
+          const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+          let actualCommit = null;
+          for (let attempt = 1; attempt <= 24; attempt++) {
+            const response = await page.goto(process.env.FRONTEND_URL, {waitUntil:'networkidle', timeout:60000});
+            if (!response || !response.ok()) throw new Error(`frontend HTTP ${response?.status()}`);
+            actualCommit = await page.locator('html').getAttribute('data-cleanroom-commit');
+            if (actualCommit === process.env.EXPECTED_COMMIT) break;
+            if (attempt < 24) await page.waitForTimeout(10000);
+          }
+          if (actualCommit !== process.env.EXPECTED_COMMIT) throw new Error(`stale fixed link: ${actualCommit}`);
+
+          const required = {
+            shell: '.cleanroom-approved-lobby',
+            brand: '.cleanroom-brand-approved',
+            emblem: '.cleanroom-emblem',
+            emblemTitle: '.cleanroom-emblem-title',
+            title: '.cleanroom-game-title',
+            english: '.cleanroom-game-title-en',
+            tagline: '.cleanroom-game-tagline',
+            card: '.cleanroom-join-card',
+          };
+          for (const [name, sel] of Object.entries(required)) {
+            const loc = page.locator(sel);
+            if (await loc.count() !== 1) throw new Error(`${name} must exist exactly once`);
+            if (!(await loc.isVisible())) throw new Error(`${name} must be visible`);
+          }
+
+          const box = async sel => {
+            const b = await page.locator(sel).boundingBox();
+            if (!b) throw new Error(`missing box for ${sel}`);
+            return {top:b.y,bottom:b.y+b.height,left:b.x,right:b.x+b.width,width:b.width,height:b.height};
+          };
+          const emblem = await box(required.emblem);
+          const title = await box(required.title);
+          const english = await box(required.english);
+          const tagline = await box(required.tagline);
+          const card = await box(required.card);
+
+          if (emblem.bottom > title.top) throw new Error(`emblem overlaps title: ${JSON.stringify({emblem,title})}`);
+          if (title.bottom > english.top) throw new Error(`Chinese title overlaps English title: ${JSON.stringify({title,english})}`);
+          if (english.bottom > tagline.top) throw new Error(`English title overlaps tagline: ${JSON.stringify({english,tagline})}`);
+          if (english.bottom > card.top) throw new Error(`English title overlaps join card: ${JSON.stringify({english,card})}`);
+          if (tagline.bottom > card.top) throw new Error(`tagline overlaps join card: ${JSON.stringify({tagline,card})}`);
+          if (title.width > 360 || card.width > 370) throw new Error('mobile content exceeds safe viewport width');
+
+          await page.screenshot({path:'lobby-iphone-390x844.png', fullPage:true});
+          console.log(JSON.stringify({type:'lobby_visual_gate_pass',viewport:{width:390,height:844},actualCommit,emblem,title,english,tagline,card}));
+          await browser.close();
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lobby-iphone-390x844
+          path: lobby-iphone-390x844.png
+          if-no-files-found: ignore
