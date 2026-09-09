@@ -1,0 +1,114 @@
+/* Approved lobby polish: keep the emblem and 掼蛋游戏 title visually separate on every viewport. */
+.cleanroom-join-shell {
+  overflow-x: hidden;
+  overflow-y: auto;
+  background:
+    radial-gradient(circle at 50% 4%, rgba(255, 253, 239, .98) 0 18%, transparent 42%),
+    radial-gradient(ellipse at 8% 72%, rgba(44, 91, 64, .12) 0 18%, transparent 42%),
+    radial-gradient(ellipse at 92% 62%, rgba(44, 91, 64, .11) 0 18%, transparent 42%),
+    linear-gradient(180deg, #f8f5e7 0%, #eef1e5 48%, #dbe8dc 100%);
+}
+
+.cleanroom-join-content {
+  width: min(100%, 680px);
+}
+
+.cleanroom-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin: 4px auto 24px;
+}
+
+.cleanroom-emblem {
+  flex: 0 0 auto;
+  width: 250px;
+  height: 205px;
+  margin: 0 auto 12px;
+}
+
+.cleanroom-game-title {
+  position: relative;
+  z-index: 7;
+  flex: 0 0 auto;
+  margin: 0 !important;
+  padding-top: 4px;
+  font-size: clamp(38px, 7vw, 54px);
+  line-height: 1.18;
+}
+
+.cleanroom-game-title-en {
+  margin-top: 7px;
+}
+
+.cleanroom-game-tagline {
+  margin-top: 7px;
+}
+
+.cleanroom-join-card {
+  width: min(100%, 560px);
+  border-radius: 18px;
+  border-color: rgba(181, 145, 76, .52);
+  background: rgba(255, 254, 248, .97);
+}
+
+@media (max-width: 600px) {
+  .cleanroom-join-shell {
+    padding: 14px 10px 32px;
+  }
+
+  .cleanroom-brand {
+    margin: 0 auto 18px;
+  }
+
+  .cleanroom-emblem {
+    width: 210px;
+    height: 178px;
+    margin-bottom: 10px;
+    transform: scale(.92);
+    transform-origin: center bottom;
+  }
+
+  .cleanroom-game-title {
+    margin-top: 0 !important;
+    padding-top: 6px;
+    font-size: 38px;
+    letter-spacing: 5px;
+    text-indent: 5px;
+    line-height: 1.2;
+  }
+
+  .cleanroom-game-title-en {
+    margin-top: 5px;
+    font-size: 16px;
+  }
+
+  .cleanroom-game-title-en::before,
+  .cleanroom-game-title-en::after {
+    width: 34px;
+  }
+
+  .cleanroom-game-tagline {
+    margin-top: 5px;
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+
+  .cleanroom-join-card {
+    width: 100%;
+    padding: 28px 20px 24px;
+    border-radius: 18px;
+  }
+}
+
+@media (max-width: 390px) {
+  .cleanroom-emblem {
+    height: 170px;
+    transform: scale(.86);
+  }
+
+  .cleanroom-game-title {
+    font-size: 34px;
+  }
+}
