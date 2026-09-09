@@ -1,111 +1,139 @@
-/* Lobby v4 — rich watercolor shanshui treatment matching the approved reference. */
+/* Lobby v5 — single reference-composition stage based on the approved final mockup. */
 .cleanroom-join-shell.cleanroom-approved-lobby {
   position: relative;
   min-height: 100vh;
-  overflow-x: hidden;
-  overflow-y: auto;
-  padding: 24px 18px 64px !important;
-  color: #173f2d;
-  isolation: isolate;
-  background:
-    radial-gradient(circle at 12% 18%, rgba(255,255,255,.92) 0 7%, transparent 25%),
-    radial-gradient(circle at 82% 23%, rgba(255,247,229,.78) 0 8%, transparent 28%),
-    linear-gradient(180deg,#fbf4df 0%,#f7f1df 27%,#edf1df 58%,#dbe9dc 100%) !important;
+  height: 100vh;
+  overflow: hidden;
+  padding: 0 !important;
+  background-color: #e7eee7 !important;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMzQ4IiBoZWlnaHQ9IjExNjciIHZpZXdCb3g9IjAgMCAxMzQ4IDExNjciPgo8ZGVmcz4KIDxsaW5lYXJHcmFkaWVudCBpZD0icGFwZXIiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmJmOGVkIi8+PHN0b3Agb2Zmc2V0PSIuNTUiIHN0b3AtY29sb3I9IiNlZWYzZTkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNkN2U0ZGMiLz48L2xpbmVhckdyYWRpZW50PgogPGxpbmVhckdyYWRpZW50IGlkPSJ3YXZlIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iIzUzN2Y3MyIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzI4NWY1OSIvPjwvbGluZWFyR3JhZGllbnQ+CiA8bGluZWFyR3JhZGllbnQgaWQ9InJlZCIgeDE9IjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiNjNzM0MjAiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM4YzE2MGYiLz48L2xpbmVhckdyYWRpZW50PgogPGZpbHRlciBpZD0ic2hhZG93IiB4PSItMjAlIiB5PSItMjAlIiB3aWR0aD0iMTQwJSIgaGVpZ2h0PSIxNjAlIj48ZmVEcm9wU2hhZG93IGR4PSIwIiBkeT0iMTAiIHN0ZERldmlhdGlvbj0iMTAiIGZsb29kLWNvbG9yPSIjMzE0YjNjIiBmbG9vZC1vcGFjaXR5PSIuMTgiLz48L2ZpbHRlcj4KIDxmaWx0ZXIgaWQ9InNvZnQiPjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjEuMiIvPjwvZmlsdGVyPgo8L2RlZnM+CjxyZWN0IHdpZHRoPSIxMzQ4IiBoZWlnaHQ9IjExNjciIGZpbGw9InVybCgjcGFwZXIpIi8+CjxyZWN0IHg9IjEwIiB5PSIxMCIgd2lkdGg9IjEzMjgiIGhlaWdodD0iMTE0NyIgcng9IjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2M3OWM0NyIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik0xMCA1NWg1NVYxME0xMCAxMTBoMThWMjhoODIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2M3OWM0NyIgc3Ryb2tlLXdpZHRoPSI1Ii8+CjxwYXRoIGQ9Ik0xMzM4IDU1aC01NVYxME0xMzM4IDExMGgtMThWMjhoLTgyIiBmaWxsPSJub25lIiBzdHJva2U9IiNjNzljNDciIHN0cm9rZS13aWR0aD0iNSIvPgo8cGF0aCBkPSJNMTAgMTExMmg1NXY0NU0xMCAxMDU3aDE4djgyaDgyIiBmaWxsPSJub25lIiBzdHJva2U9IiNjNzljNDciIHN0cm9rZS13aWR0aD0iNSIvPgo8cGF0aCBkPSJNMTMzOCAxMTEyaC01NXY0NU0xMzM4IDEwNTdoLTE4djgyaC04MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzc5YzQ3IiBzdHJva2Utd2lkdGg9IjUiLz4KPGcgb3BhY2l0eT0iLjQ1IiBmaWxsPSIjN2Q5YjhlIj48cGF0aCBkPSJNMCA0NTUgTDc1IDMwMCAxMjAgMzcwIDE5MCAyNDUgMjQ1IDM1MCAzMTUgMjIwIDM4NSAzNTUgNDUwIDI4MCA1MjAgNDMwIDAgNTIweiIvPjxwYXRoIGQ9Ik04MzUgNDQwIEw5MDAgMzIwIDk1NSAzNjUgMTAzNSAyMzUgMTA5MCAzNjAgMTE1MCAyODAgMTIxNSAzODAgMTI3MCAyNTAgMTM0OCA0MTAgMTM0OCA1MjAgODIwIDUyMHoiLz48L2c+CjxnIG9wYWNpdHk9Ii4yMyIgZmlsbD0iIzlmYjRhYSI+PHBhdGggZD0iTTgwIDMwMCBMMTY1IDE4MCAyMzUgMzMwIDMyNSAxNTUgNDMwIDM1NSA1NDAgMjA1IDYxNSAzOTAgMCA0NzAgMCAzNzB6Ii8+PHBhdGggZD0iTTc3MCAzOTAgTDg3NSAxODAgOTU1IDM1MCAxMDYwIDE2MCAxMTYwIDM0MCAxMjYwIDE5MCAxMzQ4IDMyMCAxMzQ4IDQ3MHoiLz48L2c+CjxnIHN0cm9rZT0iIzMxNWY0MiIgc3Ryb2tlLXdpZHRoPSI5IiBvcGFjaXR5PSIuOSIgZmlsbD0iIzNmNzU1MSI+PHBhdGggZD0iTTg4IDAgTDU4IDMwMCBNMTM2IDAgTDExMiAyNDUgTTQ4IDAgTDE4IDI0MCIgZmlsbD0ibm9uZSIvPjxnIHN0cm9rZT0ibm9uZSI+PHBhdGggZD0iTTgwIDU4IHEtNTUgMTUtNzIgNTUgcTQ4LTMgODQtMzF6Ii8+PHBhdGggZD0iTTkxIDg2IHE0NSA1IDc1IDQwIHEtNTEgOC04My0xNXoiLz48cGF0aCBkPSJNNzIgMTMyIHEtNjAgMTUtNzggNTUgcTUwLTIgODgtMzB6Ii8+PHBhdGggZD0iTTExMyAxNTQgcTUyIDMgNzYgMzggcS01MCA4LTg0LTE0eiIvPjxwYXRoIGQ9Ik01NSAyMDAgcS01NCAxMi03NSA0OCBxNDYgMCA4MC0yNXoiLz48cGF0aCBkPSJNMTI0IDIxOCBxNDQgMCA3MSAzMCBxLTQzIDktNzQtOHoiLz48cGF0aCBkPSJNMTcgNTggcS0zMCAxMi00OCA0MiBxMzUgMSA1OC0yMHoiLz48cGF0aCBkPSJNMTQ1IDQ2IHE1MCAzIDc1IDM0IHEtNDYgOC03OC0xMHoiLz48L2c+PC9nPgo8ZyBzdHJva2U9IiMzYzJhMjIiIHN0cm9rZS13aWR0aD0iMTAiIGZpbGw9Im5vbmUiPjxwYXRoIGQ9Ik0xMDIwIDEwIEMxMTEwIDcwIDExODAgNTUgMTM0OCAxMCIvPjxwYXRoIGQ9Ik0xMTIwIDcwIEMxMTgwIDEzMCAxMjUwIDEwMCAxMzIwIDU1Ii8+PC9nPgo8ZyBmaWxsPSIjZWY5YThkIiBzdHJva2U9IiNkNTZkNjAiIHN0cm9rZS13aWR0aD0iMiI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTA4MCA1NSkiPjxjaXJjbGUgcj0iMTEiLz48Y2lyY2xlIGN4PSIxNyIgY3k9Ii04IiByPSIxMSIvPjxjaXJjbGUgY3g9IjIwIiBjeT0iMTIiIHI9IjExIi8+PGNpcmNsZSBjeD0iMSIgY3k9IjE5IiByPSIxMSIvPjxjaXJjbGUgY3g9Ii0xNCIgY3k9IjciIHI9IjExIi8+PGNpcmNsZSBmaWxsPSIjZWZjZjc2IiByPSI0Ii8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDExNjAgOTIpIj48Y2lyY2xlIHI9IjEyIi8+PGNpcmNsZSBjeD0iMTgiIGN5PSItOCIgcj0iMTIiLz48Y2lyY2xlIGN4PSIyMCIgY3k9IjEzIiByPSIxMiIvPjxjaXJjbGUgY3g9IjAiIGN5PSIyMCIgcj0iMTIiLz48Y2lyY2xlIGN4PSItMTUiIGN5PSI3IiByPSIxMiIvPjxjaXJjbGUgZmlsbD0iI2VmY2Y3NiIgcj0iNCIvPjwvZz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMjQ1IDQwKSI+PGNpcmNsZSByPSIxMSIvPjxjaXJjbGUgY3g9IjE3IiBjeT0iLTgiIHI9IjExIi8+PGNpcmNsZSBjeD0iMjAiIGN5PSIxMiIgcj0iMTEiLz48Y2lyY2xlIGN4PSIxIiBjeT0iMTkiIHI9IjExIi8+PGNpcmNsZSBjeD0iLTE0IiBjeT0iNyIgcj0iMTEiLz48Y2lyY2xlIGZpbGw9IiNlZmNmNzYiIHI9IjQiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTMxMCA4OCkiPjxjaXJjbGUgcj0iMTAiLz48Y2lyY2xlIGN4PSIxNSIgY3k9Ii03IiByPSIxMCIvPjxjaXJjbGUgY3g9IjE3IiBjeT0iMTEiIHI9IjEwIi8+PGNpcmNsZSBjeD0iMCIgY3k9IjE3IiByPSIxMCIvPjxjaXJjbGUgY3g9Ii0xMyIgY3k9IjYiIHI9IjEwIi8+PGNpcmNsZSBmaWxsPSIjZWZjZjc2IiByPSI0Ii8+PC9nPjwvZz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTIzNSAxNzApIiBmaWx0ZXI9InVybCgjc2hhZG93KSI+PHJlY3QgeD0iMjgiIHk9Ii0zNCIgd2lkdGg9IjgiIGhlaWdodD0iMzQiIGZpbGw9IiNhMzdhMzQiLz48ZWxsaXBzZSBjeD0iMzIiIGN5PSIzNCIgcng9IjQ0IiByeT0iNTYiIGZpbGw9IiNjOTJmMjIiIHN0cm9rZT0iI2Q3YWE1NSIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTggNmg0OE0zIDM0aDU4TTggNjJoNDgiIHN0cm9rZT0iI2U5YjI1MiIgc3Ryb2tlLXdpZHRoPSIzIi8+PHRleHQgeD0iMzIiIHk9IjQ3IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjI4IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjZjVkNTZkIj7np488L3RleHQ+PHJlY3QgeD0iMTgiIHk9Ijg4IiB3aWR0aD0iMjgiIGhlaWdodD0iMTIiIHJ4PSIzIiBmaWxsPSIjZDVhNTRkIi8+PHBhdGggZD0iTTMyIDEwMHY1Mk0yMiAxMDV2MzhNNDIgMTA1djM4IiBzdHJva2U9IiNiNzI1MWMiIHN0cm9rZS13aWR0aD0iNCIvPjwvZz4KPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNTU3NjY4IiBzdHJva2Utd2lkdGg9IjMiIG9wYWNpdHk9Ii43Ij48cGF0aCBkPSJNOTMwIDIyNSBxMTAtMTQgMjAgMCBxMTAtMTQgMjAgMCIvPjxwYXRoIGQ9Ik05ODAgMjU1IHE5LTEyIDE4IDAgcTktMTIgMTggMCIvPjwvZz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwIDU5MCkiIHN0cm9rZT0iIzZmOGM3ZSIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iLjg1Ij48cGF0aCBkPSJNMCAxMjAgUTExMCAyMCAyNTAgMTIwIiBzdHJva2Utd2lkdGg9IjEwIi8+PHBhdGggZD0iTTAgMTA0IFExMTAgMjUgMjUwIDEwNCIgc3Ryb2tlLXdpZHRoPSI0Ii8+PGcgc3Ryb2tlLXdpZHRoPSI0Ij48cGF0aCBkPSJNMjYgODZ2MzVNNTQgNjV2MzhNODYgNDl2MzlNMTIwIDM5djM4TTE1NSA0NXYzOE0xODggNTh2MzhNMjE4IDc3djM2Ii8+PC9nPjwvZz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTA4MCA0NzApIiBzdHJva2U9IiMzMTU2NGEiIHN0cm9rZS13aWR0aD0iNyIgZmlsbD0iIzZiOGQ3YyIgb3BhY2l0eT0iLjkiPjxwYXRoIGQ9Ik0tMzAgNTAgaDE1MCBsLTI1IDI0IGgtMTAweiIvPjxwYXRoIGQ9Ik0tMTIgNzYgaDExNSB2NzAgaC0xMTV6IiBmaWxsPSIjZDllMWQ2Ii8+PHBhdGggZD0iTTUgNzggdjY2IE0zNSA3OHY2NiBNNjUgNzh2NjYgTTk1IDc4djY2Ii8+PHBhdGggZD0iTS00NSA1MCBxODUtNjIgMTgwIDAiIGZpbGw9IiM1NTc4NjgiLz48cGF0aCBkPSJNLTUgMTQ1IGgxMDUiLz48L2c+CjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDY3NCAxMjApIiBmaWx0ZXI9InVybCgjc2hhZG93KSI+PGNpcmNsZSByPSIxMjAiIGZpbGw9IiNiNzIwMTYiIHN0cm9rZT0iI2Q3YTc0NCIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTEwNSAtNzApIj48ZyB0cmFuc2Zvcm09InJvdGF0ZSgtMTggMzQgNTIpIj48cmVjdIHdpZHRoPSI3NCIgaGVpZ2h0PSIxMDUiIHJ4PSI4IiBmaWxsPSIjZmZmOWRmIiBzdHJva2U9IiNkNGFhNGYiIHN0cm9rZS13aWR0aD0iNCIvPjx0ZXh0IHg9IjE2IiB5PSIzOCIgZm9udC1zaXplPSIzNCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iI2MyMmEyMCI+MTPimaY8L3RleHQ+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDU4IC05KSByb3RhdGUoLTYgMzQgNTIpIj48cmVjdIHdpZHRoPSI3NCIgaGVpZ2h0PSIxMDUiIHJ4PSI4IiBmaWxsPSIjZmZmOWRmIiBzdHJva2U9IiNkNGFhNGYiIHN0cm9rZS13aWR0aD0iNCIvPjx0ZXh0IHg9IjI1IiB5PSI0MCIgZm9udC1zaXplPSI0MiIgZm9udC13ZWlnaHQ9IjcwMCI+SuKZozwvdGV4dD48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTIwIC0xMCkgcm90YXRlKDcgMzQgNTIpIj48cmVjdIHdpZHRoPSI3NCIgaGVpZ2h0PSIxMDUiIHJ4PSI4IiBmaWxsPSIjZmZmOWRmIiBzdHJva2U9IiNkNGFhNGYiIHN0cm9rZS13aWR0aD0iNCIvPjx0ZXh0IHg9IjIwIiB5PSI0MCIgZm9udC1zaXplPSI0MiIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iI2MyMmEyMCI+UeKZpTwvdGV4dD48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTgyIDIpIHJvdGF0ZSgxOCAzNCA1MikiPjxyZWN0IHdpZHRoPSI3NCIgaGVpZ2h0PSIxMDUiIHJ4PSI4IiBmaWxsPSIjZmZmOWRmIiBzdHJva2U9IiNkNGFhNGYiIHN0cm9rZS13aWR0aD0iNCIvPjx0ZXh0IHg9IjIyIiB5PSI0MCIgZm9udC1zaXplPSI0MiIgZm9udC13ZWlnaHQ9IjcwMCI+S+KZoDwvdGV4dD48L2c+PC9nPjxwYXRoIGQ9Ik0tMTY1IDQ1IHEtNDUtNDUgMTAtNzIgcS0xMi01MiA0NS01MiBxMjQtNDAgNjctMTggcTQwLTM2IDc2IDIg cTQ2LTI0IDcyIDE4IHE1OCAwIDQ1IDUyIHE1NSAyNyAxMCA3MiBxLTI1IDU1LTE2MCA1NSBxLTEzNSAwLTE2NS01N3oiIGZpbGw9InVybCgjcmVkKSIgc3Ryb2tlPSIjZDdhNzQ0IiBzdHJva2Utd2lkdGg9IjgiLz48dGV4dCB5PSI4NCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSI5MiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2YyZDE3MiIgc3Ryb2tlPSIjNmYxODBmIiBzdHJva2Utd2lkdGg9IjMiIHBhaW50LW9yZGVyPSJzdHJva2UiPuaOvOibizwvdGV4dD48ZyBmaWxsPSIjZTJhZDQ4Ij48cGF0aCBkPSJNLTIwNSAxNSBxLTM4LTIwLTE4LTUwIHEtNDItMTItMzYgMjggcS0zOCAxMC02IDM0IHEtMjUgNDAgMTggMzg gcTI1IDI4IDQyLTZ6Ii8+PHBhdGggZD0iTTIwNSAxNSBxMzgtMjAgMTgtNTAgcTQyLTEyIDM2IDI4IHEzOCAxMCA2IDM0IHEyNSA0MC0xOCAzOCBxLTI1IDI4LTQyLTZ6Ii8+PC9nPjwvZz4KPHRleHQgeD0iNjc0IiB5PSIzNTUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iNzIiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiMxODRmMzUiIGxldHRlci1zcGFjaW5nPSIxMiI+5o+Q6JuL5ri45oiPPC90ZXh0PjxwYXRoIGQ9Ik00MDUgMzg4aDE1ME03OTMgMzg4aDE1MCIgc3Ryb2tlPSIjYjY4YjQzIiBzdHJva2Utd2lkdGg9IjIiLz48dGV4dCB4PSI2NzQiIHk9IjQwNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIyOCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzljNjkyZiIgbGV0dGVyLXNwYWNpbmc9IjUiPkdVQU5EQU4gR0FNRTwvdGV4dD48dGV4dCB4PSI2NzQiIHk9IjQzOCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIyMiIgZmlsbD0iIzU1NmM2MSIgbGV0dGVyLXNwYWNpbmc9IjQiPue7j+WFu+aOqOibiyDCtyDmmbrmhaflr7nlhrMgwrfkuZDlnKjlhbblhaXnqIs8L3RleHQ+CjxnIGZpbHRlcj0idXJsKCNzaGFkb3cpIj48cmVjdIHg9IjM0NyIgeT0iNDU1IiB3aWR0aD0iNjU0IiBoZWlnaHQ9IjY1MCIgcng9IjE4IiBmaWxsPSIjZmZmZGY0IiBmaWxsLW9wYWNpdHk9Ii45NiIgc3Ryb2tlPSIjY2FhNDViIiBzdHJva2Utd2lkdGg9IjIiLz48L2c+PGcgc3Ryb2tlPSIjYzQ5YjRlIiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiPjxwYXRoIGQ9Ik0zNjUgNDkwdi0yMGgyME05ODMgNDkwdi0yMGgtMjBNMzY1IDEwNzB2MjBoMjBNOTgzIDEwNzB2MjBoLTIwIi8+PC9nPjx0ZXh0IHg9IjY3NCIgeT0iNTIzIiB0ZXh0LWFuY2hvcj0ibW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iIGZvbnQtc2l6ZT0iMTciIGZpbGw9IiM2MTZjNjUiPuaVsOS6uuaVsOWQjueahOS4i+S4gOWxgOW8gOWni+WPgui1m+OAgjwvdGV4dD48ZyBmaWxsPSJub25lIiBzdHJva2U9IiNkZmI4NWQiIHN0cm9rZS13aWR0aD0iNCIgb3BhY2l0eT0iLjY1Ij48cGF0aCBkPSJNMjUwIDM1MCBxMjUtMzUgNTAgMCBxMzUtMzAgNTUgOCBxMzUgMiAyMCAzNSBxLTQyIDgtOTUgMiBxLTIyLTE4LTMwLTQ1eiIvPjxwYXRoIGQ9Ik0xMDEwIDczMCBxMjUtMzUgNTAgMCBxMzUtMzAgNTUgOCBxMzUgMiAyMCAzNSBxLTQyIDgtOTUgMiBxLTIyLTE4LTMwLTQ1eiIvPjwvZz48cGF0aCBkPSJNMCAxMDQwIFExMjAgOTgwIDI0NSAxMDQ1IFQ0OTAgMTA0MCBUNzM1IDEwNDUgVDk4MCAxMDM1IFQxMjI1IDEwNDAgVDE0NzAgMTA0MCBWMTE2NyBIMHoiIGZpbGw9InVybCgjd2F2ZSkiLz48ZyBmaWxsPSJub25lIiBzdHJva2U9IiNkNWIzNTMiIHN0cm9rZS13aWR0aD0iMiIgb3BhY2l0eT0iLjkiPjxwYXRoIGQ9Ik0wIDEwODAgUTEyMCAxMDIwIDI0NSAxMDg1IFQ0OTAgMTA4MCBUNzM1IDEwODUgVDk4MCAxMDc1IFQxMjI1IDEwODAgVDE0NzAgMTA4MCIvPjxwYXRoIGQ9Ik0wIDExMTggUTEyMCAxMDU4IDI0NSAxMTIzIFQ0OTAgMTExOCBUNzM1IDExMjMgVDk4MCAxMTEzIFQxMjI1IDExMTggVDE0NzAgMTExOCIvPjxwYXRoIGQ9Ik0wIDExNTAgUTEyMCAxMDkwIDI0NSAxMTU1IFQ0OTAgMTE1MCBUNzM1IDExNTUgVDk4MCAxMTQ1IFQxMjI1IDExNTAgVDE0NzAgMTE1MCIvPjwvZz48L3N2Zz4=") !important;
+  background-repeat: no-repeat !important;
+  background-position: center top !important;
+  background-size: auto 100vh !important;
 }
-.cleanroom-approved-lobby::before {
-  content:""; position:absolute; inset:10px; z-index:0; pointer-events:none;
-  border:1px solid rgba(183,143,61,.60); box-shadow:inset 0 0 0 3px rgba(255,249,224,.55);
+
+.cleanroom-approved-lobby::before,
+.cleanroom-approved-lobby::after,
+.cleanroom-approved-lobby .cleanroom-brand,
+.cleanroom-approved-lobby .cleanroom-bamboo,
+.cleanroom-approved-lobby .cleanroom-plum,
+.cleanroom-approved-lobby .cleanroom-lantern,
+.cleanroom-approved-lobby .cleanroom-mountains,
+.cleanroom-approved-lobby .cleanroom-waves,
+.cleanroom-approved-lobby .cleanroom-clouds,
+.cleanroom-approved-lobby .cleanroom-birds,
+.cleanroom-approved-lobby .cleanroom-bridge,
+.cleanroom-approved-lobby .cleanroom-pavilion,
+.cleanroom-approved-lobby .cleanroom-border-ornament,
+.cleanroom-approved-lobby .cleanroom-card-corner,
+.cleanroom-approved-lobby .cleanroom-join-card h2,
+.cleanroom-approved-lobby .cleanroom-join-card label,
+.cleanroom-approved-lobby .cleanroom-note,
+.cleanroom-approved-lobby .cleanroom-hint {
+  display: none !important;
 }
-.cleanroom-approved-lobby::after {
-  content:""; position:absolute; left:-12%; right:-12%; bottom:-8px; height:320px; z-index:0; pointer-events:none; opacity:.64;
-  background:
-    radial-gradient(ellipse at 22% 100%, transparent 0 32%, rgba(39,106,91,.22) 33% 36%, transparent 37% 46%, rgba(39,106,91,.18) 47% 50%, transparent 51%),
-    radial-gradient(ellipse at 55% 105%, transparent 0 35%, rgba(58,126,107,.21) 36% 39%, transparent 40% 49%, rgba(58,126,107,.16) 50% 53%, transparent 54%),
-    radial-gradient(ellipse at 85% 100%, transparent 0 29%, rgba(30,92,79,.20) 30% 33%, transparent 34% 43%, rgba(30,92,79,.15) 44% 47%, transparent 48%);
+
+.cleanroom-approved-lobby .cleanroom-join-content {
+  position: static !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
-.cleanroom-approved-lobby .cleanroom-join-content { position:relative; z-index:8; width:min(100%,610px)!important; margin:0 auto; padding-top:0!important; }
-.cleanroom-approved-lobby .cleanroom-brand { display:flex!important; flex-direction:column; align-items:center; width:100%; margin:6px auto 30px!important; }
 
-/* ornate red/gold emblem */
-.cleanroom-approved-lobby .cleanroom-emblem { position:relative; width:260px!important; height:196px!important; margin:0 auto 24px!important; filter:drop-shadow(0 12px 12px rgba(92,41,24,.19)); }
-.cleanroom-approved-lobby .cleanroom-emblem::before { content:""; position:absolute; left:50%; top:58px; width:220px; height:116px; transform:translateX(-50%); border:5px solid #d4a342; border-radius:48% 48% 42% 42%/52% 52% 40% 40%; background:linear-gradient(180deg,#c23224,#9f2118 58%,#7e1712); box-shadow:inset 0 0 0 3px #751511,0 7px 0 #7b2518; }
-.cleanroom-approved-lobby .cleanroom-emblem::after { content:"掼"; position:absolute; left:50%; bottom:-9px; z-index:10; width:43px; height:43px; transform:translateX(-50%); display:grid; place-items:center; border:3px solid #e1b04c; border-radius:50%; background:#9b2118; color:#f6d276; font-weight:900; font-size:19px; box-shadow:0 3px 0 #6f170f; }
-.cleanroom-approved-lobby .cleanroom-emblem-cloud { position:absolute; top:83px; width:44px; height:26px; border:4px solid #d7aa4d; border-color:#d7aa4d transparent transparent #d7aa4d; border-radius:50%; opacity:.95; }
-.cleanroom-approved-lobby .cleanroom-emblem-cloud-left { left:2px; transform:rotate(-18deg); }
-.cleanroom-approved-lobby .cleanroom-emblem-cloud-right { right:2px; transform:scaleX(-1) rotate(-18deg); }
-.cleanroom-approved-lobby .cleanroom-emblem-title { top:87px!important; z-index:7!important; width:202px!important; border:0!important; background:transparent!important; box-shadow:none!important; color:#f4d278!important; font-size:48px!important; letter-spacing:5px!important; text-shadow:0 2px 0 #7b1a12,0 0 8px rgba(255,233,162,.2)!important; }
-.cleanroom-approved-lobby .cleanroom-card-fan { top:0!important; z-index:6!important; }
-.cleanroom-approved-lobby .cleanroom-fan-card { width:52px!important; height:75px!important; border:2px solid #d5aa4c!important; border-radius:9px!important; background:linear-gradient(150deg,#fffef6,#f3dfaa)!important; box-shadow:0 3px 8px rgba(70,49,20,.16)!important; font-size:17px!important; }
-
-.cleanroom-approved-lobby .cleanroom-game-title { margin:0!important; color:#204a35!important; font-size:clamp(42px,7vw,56px)!important; font-weight:800!important; letter-spacing:9px!important; text-indent:9px; line-height:1.08!important; }
-.cleanroom-approved-lobby .cleanroom-game-title-en { margin-top:11px!important; color:#9b6731!important; font-size:18px!important; letter-spacing:3.8px!important; font-family:Georgia,serif; }
-.cleanroom-approved-lobby .cleanroom-game-title-en::before,.cleanroom-approved-lobby .cleanroom-game-title-en::after { width:70px!important; height:1px!important; background:linear-gradient(90deg,transparent,#b68a44,transparent)!important; }
-.cleanroom-approved-lobby .cleanroom-game-tagline { margin:9px 0 0!important; color:#667167!important; font-size:14px!important; letter-spacing:2px!important; }
-
-/* scenery */
-.cleanroom-approved-lobby .cleanroom-bamboo { display:block!important; position:absolute!important; z-index:2!important; top:0!important; left:-24px!important; width:210px!important; height:520px!important; opacity:.48!important; background:
-  linear-gradient(83deg,transparent 47%,#587a58 48% 50%,transparent 51%) 12px 0/72px 100%,
-  linear-gradient(87deg,transparent 48%,#6a8863 49% 51%,transparent 52%) 76px 12px/74px 100%,
-  radial-gradient(ellipse at 76% 52%,#54785c 0 24%,transparent 26%) 0 10px/86px 58px,
-  radial-gradient(ellipse at 20% 48%,#6e8c6b 0 23%,transparent 25%) 30px 52px/90px 58px!important; transform:rotate(-5deg)!important; }
-.cleanroom-approved-lobby .cleanroom-plum { display:block!important; position:absolute!important; z-index:2!important; top:8px!important; right:-20px!important; width:270px!important; height:310px!important; opacity:.77!important; background:
-  radial-gradient(circle,#a13a31 0 10%,#e99d85 11% 25%,transparent 27%) 32px 10px/50px 50px,
-  radial-gradient(circle,#ad4034 0 10%,#efad92 11% 25%,transparent 27%) 94px 46px/54px 54px,
-  radial-gradient(circle,#a13a31 0 10%,#e99d85 11% 25%,transparent 27%) 153px 12px/50px 50px,
-  radial-gradient(circle,#b24538 0 10%,#efb198 11% 25%,transparent 27%) 118px 105px/48px 48px,
-  linear-gradient(142deg,transparent 48%,#624638 49% 51%,transparent 52%)!important; }
-.cleanroom-approved-lobby .cleanroom-lantern { display:grid!important; place-items:center; position:absolute!important; z-index:3!important; top:170px!important; right:7%!important; width:58px!important; height:74px!important; border:2px solid #b95a42!important; border-radius:45% 45% 43% 43%!important; background:radial-gradient(circle at 50% 35%,#ec9d7f 0 12%,#d66f57 60%,#b84b3f 100%)!important; color:#7d1b15!important; font-weight:800!important; font-size:24px!important; box-shadow:inset 9px 0 12px rgba(122,31,21,.12),inset -9px 0 12px rgba(122,31,21,.12)!important; opacity:.86!important; }
-.cleanroom-approved-lobby .cleanroom-lantern::before { content:""; position:absolute; top:-14px; width:2px; height:14px; background:#956642; }
-.cleanroom-approved-lobby .cleanroom-lantern::after { content:""; position:absolute; bottom:-24px; width:2px; height:24px; background:#a85b42; box-shadow:-8px 0 0 #a85b42,8px 0 0 #a85b42; }
-.cleanroom-approved-lobby .cleanroom-clouds { position:absolute; z-index:1; width:180px; height:70px; opacity:.2; background:radial-gradient(ellipse at 20% 70%,#9ab3a0 0 24%,transparent 26%),radial-gradient(ellipse at 50% 58%,#9ab3a0 0 29%,transparent 31%),radial-gradient(ellipse at 80% 70%,#9ab3a0 0 22%,transparent 24%); }
-.cleanroom-approved-lobby .cleanroom-clouds-left { left:6%; top:420px; }
-.cleanroom-approved-lobby .cleanroom-clouds-right { right:4%; top:510px; transform:scale(.8); }
-.cleanroom-approved-lobby .cleanroom-birds { position:absolute; z-index:2; top:390px; right:25%; color:#405b4d; font-size:24px; letter-spacing:8px; opacity:.45; transform:rotate(-8deg); }
-.cleanroom-approved-lobby .cleanroom-bridge { position:absolute; z-index:2; left:4%; top:560px; width:150px; height:64px; border-top:7px solid rgba(102,87,58,.55); border-radius:50% 50% 0 0; transform:rotate(-4deg); opacity:.72; }
-.cleanroom-approved-lobby .cleanroom-bridge::before,.cleanroom-approved-lobby .cleanroom-bridge::after { content:""; position:absolute; top:13px; width:5px; height:48px; background:rgba(102,87,58,.5); }
-.cleanroom-approved-lobby .cleanroom-bridge::before { left:27px; }.cleanroom-approved-lobby .cleanroom-bridge::after { right:27px; }
-.cleanroom-approved-lobby .cleanroom-pavilion { position:absolute; z-index:2; right:4%; top:505px; width:96px; height:70px; opacity:.58; }
-.cleanroom-approved-lobby .cleanroom-pavilion::before { content:""; position:absolute; left:6px; top:8px; width:84px; height:18px; background:#486a55; clip-path:polygon(0 100%,20% 18%,50% 0,80% 18%,100% 100%,76% 67%,24% 67%); }
-.cleanroom-approved-lobby .cleanroom-pavilion::after { content:""; position:absolute; left:22px; top:26px; width:52px; height:38px; border-left:4px solid #57705a; border-right:4px solid #57705a; border-bottom:5px solid #57705a; }
-.cleanroom-approved-lobby .cleanroom-pavilion span { display:none; }
-.cleanroom-approved-lobby .cleanroom-mountains { display:block!important; position:absolute!important; z-index:1!important; bottom:9%!important; height:44%!important; width:56%!important; opacity:.20!important; filter:blur(.2px); }
-.cleanroom-approved-lobby .cleanroom-mountains-left { left:-8%!important; }.cleanroom-approved-lobby .cleanroom-mountains-right { right:-8%!important; }
-.cleanroom-approved-lobby .cleanroom-waves { display:block!important; position:absolute!important; z-index:1!important; left:0!important; right:0!important; bottom:0!important; height:210px!important; opacity:.30!important; }
-.cleanroom-approved-lobby .cleanroom-border-ornament { position:absolute; z-index:3; top:15px; width:42px; height:42px; border-top:2px solid #b68b43; }
-.cleanroom-approved-lobby .cleanroom-border-ornament-tl { left:15px; border-left:2px solid #b68b43; }.cleanroom-approved-lobby .cleanroom-border-ornament-tr { right:15px; border-right:2px solid #b68b43; }
-
-/* Join card */
-.cleanroom-approved-lobby .cleanroom-join-card { position:relative; width:min(100%,480px)!important; margin:22px auto 0!important; padding:31px 26px 28px!important; border:1px solid rgba(184,145,66,.58)!important; border-radius:14px!important; background:rgba(255,253,243,.955)!important; box-shadow:0 22px 48px rgba(36,74,54,.14),inset 0 0 32px rgba(219,186,109,.09)!important; backdrop-filter:blur(7px); }
-.cleanroom-approved-lobby .cleanroom-join-card h2 { margin:0 0 20px!important; color:#24533a!important; font-size:30px!important; letter-spacing:6px!important; }
-.cleanroom-approved-lobby .cleanroom-join-card h2::after { content:"ENTER ROOM"!important; display:block!important; margin-top:7px!important; color:#b58b48!important; font-size:10px!important; font-family:Georgia,serif!important; font-weight:600!important; letter-spacing:3px!important; }
-.cleanroom-approved-lobby .cleanroom-join-card label { margin-top:15px!important; color:#285039!important; font-size:15px!important; }
-.cleanroom-approved-lobby .cleanroom-join-card input,.cleanroom-approved-lobby .cleanroom-join-card select { min-height:49px!important; border:1px solid #c6c4ad!important; border-radius:9px!important; background:#fffef8!important; font-size:17px!important; }
-.cleanroom-approved-lobby .cleanroom-note { color:#73776e!important; font-size:12px!important; line-height:1.55!important; }
-.cleanroom-approved-lobby .cleanroom-join-card button { min-height:66px!important; margin-top:21px!important; border:1px solid #caa158!important; border-radius:9px!important; background:linear-gradient(180deg,#3d8059,#236947)!important; box-shadow:inset 0 0 0 2px rgba(248,219,145,.14),0 5px 12px rgba(40,83,58,.17)!important; }
-.cleanroom-approved-lobby .cleanroom-hint { margin-top:17px!important; color:#74786f!important; font-size:12px!important; line-height:1.7!important; }
-
-@media (max-width:600px) {
-  .cleanroom-join-shell.cleanroom-approved-lobby { padding:12px 10px 44px!important; }
-  .cleanroom-approved-lobby .cleanroom-brand { margin:2px auto 20px!important; }
-  .cleanroom-approved-lobby .cleanroom-emblem { width:224px!important; height:174px!important; margin-bottom:24px!important; }
-  .cleanroom-approved-lobby .cleanroom-emblem::before { width:196px; height:102px; top:55px; }
-  .cleanroom-approved-lobby .cleanroom-emblem-title { top:82px!important; width:184px!important; font-size:42px!important; }
-  .cleanroom-approved-lobby .cleanroom-card-fan { transform:translateX(-50%) scale(.91); transform-origin:center bottom; }
-  .cleanroom-approved-lobby .cleanroom-game-title { font-size:38px!important; letter-spacing:7px!important; text-indent:7px!important; }
-  .cleanroom-approved-lobby .cleanroom-game-title-en { font-size:15px!important; letter-spacing:2.7px!important; }
-  .cleanroom-approved-lobby .cleanroom-game-title-en::before,.cleanroom-approved-lobby .cleanroom-game-title-en::after { width:38px!important; }
-  .cleanroom-approved-lobby .cleanroom-game-tagline { font-size:11px!important; letter-spacing:1px!important; }
-  .cleanroom-approved-lobby .cleanroom-join-card { width:calc(100% - 12px)!important; padding:27px 20px 24px!important; }
-  .cleanroom-approved-lobby .cleanroom-bamboo { left:-74px!important; width:170px!important; height:430px!important; opacity:.36!important; }
-  .cleanroom-approved-lobby .cleanroom-plum { right:-96px!important; width:220px!important; height:260px!important; opacity:.60!important; }
-  .cleanroom-approved-lobby .cleanroom-lantern { top:158px!important; right:4%!important; transform:scale(.82); }
-  .cleanroom-approved-lobby .cleanroom-bridge { top:525px; left:-16px; transform:scale(.72) rotate(-4deg); }
-  .cleanroom-approved-lobby .cleanroom-pavilion { top:470px; right:-20px; transform:scale(.72); }
-  .cleanroom-approved-lobby .cleanroom-birds { top:375px; right:18%; font-size:20px; }
-  .cleanroom-approved-lobby .cleanroom-clouds-left { top:390px; left:-10%; }.cleanroom-approved-lobby .cleanroom-clouds-right { top:460px; right:-8%; }
+.cleanroom-approved-lobby .cleanroom-join-card,
+.cleanroom-approved-lobby .cleanroom-join-card form {
+  position: static !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
 }
-@media (max-width:390px) {
-  .cleanroom-approved-lobby .cleanroom-emblem { width:210px!important; height:168px!important; }
-  .cleanroom-approved-lobby .cleanroom-game-title { font-size:35px!important; }
-  .cleanroom-approved-lobby .cleanroom-join-card { width:100%!important; }
+
+.cleanroom-approved-lobby #cleanroom-room,
+.cleanroom-approved-lobby #cleanroom-player-count,
+.cleanroom-approved-lobby #cleanroom-player-name,
+.cleanroom-approved-lobby .cleanroom-join-card button {
+  position: absolute !important;
+  left: 50% !important;
+  z-index: 20 !important;
+  width: min(46.3vh, calc(100vw - 28px)) !important;
+  transform: translateX(-50%) !important;
+  box-sizing: border-box !important;
+}
+
+.cleanroom-approved-lobby #cleanroom-room {
+  top: 51.8vh !important;
+  height: 3.8vh !important;
+  min-height: 36px !important;
+}
+.cleanroom-approved-lobby #cleanroom-player-count {
+  top: 59.1vh !important;
+  height: 3.8vh !important;
+  min-height: 36px !important;
+}
+.cleanroom-approved-lobby #cleanroom-player-name {
+  top: 69.2vh !important;
+  height: 4.3vh !important;
+  min-height: 40px !important;
+}
+.cleanroom-approved-lobby .cleanroom-join-card button {
+  top: 75.4vh !important;
+  height: 7vh !important;
+  min-height: 54px !important;
+}
+
+.cleanroom-approved-lobby #cleanroom-room,
+.cleanroom-approved-lobby #cleanroom-player-count,
+.cleanroom-approved-lobby #cleanroom-player-name {
+  margin: 0 !important;
+  border: 1px solid rgba(129, 132, 118, .46) !important;
+  border-radius: 7px !important;
+  background: rgba(255,255,249,.88) !important;
+  box-shadow: none !important;
+  color: #173f2d !important;
+  font-size: clamp(16px, 2.1vh, 24px) !important;
+}
+.cleanroom-approved-lobby #cleanroom-player-name {
+  padding-left: clamp(46px, 4.4vh, 58px) !important;
+}
+.cleanroom-approved-lobby .cleanroom-join-card button {
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  color: transparent !important;
+  cursor: pointer !important;
+}
+.cleanroom-approved-lobby .cleanroom-join-card button span,
+.cleanroom-approved-lobby .cleanroom-join-card button small {
+  visibility: hidden !important;
+}
+.cleanroom-approved-lobby .cleanroom-join-card button:disabled {
+  opacity: 1 !important;
+  cursor: default !important;
+}
+
+@media (max-width: 600px) {
+  .cleanroom-join-shell.cleanroom-approved-lobby {
+    min-height: 100svh !important;
+    height: 100svh !important;
+    background-size: auto 100svh !important;
+    background-position: center top !important;
+  }
+  .cleanroom-approved-lobby #cleanroom-room,
+  .cleanroom-approved-lobby #cleanroom-player-count,
+  .cleanroom-approved-lobby #cleanroom-player-name,
+  .cleanroom-approved-lobby .cleanroom-join-card button {
+    width: min(46.3svh, calc(100vw - 24px)) !important;
+  }
+  .cleanroom-approved-lobby #cleanroom-room { top: 51.8svh !important; height: 3.8svh !important; }
+  .cleanroom-approved-lobby #cleanroom-player-count { top: 59.1svh !important; height: 3.8svh !important; }
+  .cleanroom-approved-lobby #cleanroom-player-name { top: 69.2svh !important; height: 4.3svh !important; }
+  .cleanroom-approved-lobby .cleanroom-join-card button { top: 75.4svh !important; height: 7svh !important; }
 }
