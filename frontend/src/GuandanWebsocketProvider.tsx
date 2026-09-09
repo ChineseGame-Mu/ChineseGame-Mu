@@ -33,7 +33,10 @@ interface GuandanWebsocketProviderProps {
 const TEST_WEBSOCKET = "wss://chinesegame-yihua.onrender.com/api/guandan";
 const CLEANROOM_WEBSOCKET = "wss://card-games-yihua.onrender.com/api/guandan";
 
-export const cleanroomBuildCommit = __CLEANROOM_BUILD_COMMIT__;
+export const cleanroomBuildCommit =
+  typeof __CLEANROOM_BUILD_COMMIT__ === "string"
+    ? __CLEANROOM_BUILD_COMMIT__
+    : "";
 
 export const cleanroomDeploymentRoom = (
   visibleRoom: string | null,
