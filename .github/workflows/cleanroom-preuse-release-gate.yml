@@ -56,12 +56,12 @@ jobs:
           test -f "$WF"
           grep -F 'fixedRoomJoinPerformed:false' "$WF"
           grep -F 'fixedRoomsTouched:false' "$WF"
-          grep -F 'unique throwaway backend room' "$WF"
+          grep -F 'const room = `ui-e2e-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;' "$WF"
           if grep -F "send({type:'join',room:'0001'" "$WF"; then
             echo "::error::QA must never join fixed public room 0001."
             exit 1
           fi
-          echo "::notice::QA is forbidden from joining 0001-0004; gameplay E2E must use a disposable room so QA cannot leave old players, old hands or old match state in public rooms."
+          echo "::notice::QA is forbidden from joining 0001-0004; gameplay E2E uses a unique disposable room so QA cannot leave old players, old hands or old match state in public rooms."
 
       - name: Mandatory live branch smoke before release
         shell: bash
