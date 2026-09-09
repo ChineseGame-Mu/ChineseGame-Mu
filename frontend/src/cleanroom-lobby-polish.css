@@ -1,114 +1,270 @@
-/* Approved lobby polish: keep the emblem and 掼蛋游戏 title visually separate on every viewport. */
-.cleanroom-join-shell {
+/* Lobby v3 — rebuilt to match the approved shanshui reference. */
+.cleanroom-join-shell.cleanroom-approved-lobby {
+  position: relative;
+  min-height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
+  padding: 22px 18px 54px;
+  color: #173f2d;
   background:
-    radial-gradient(circle at 50% 4%, rgba(255, 253, 239, .98) 0 18%, transparent 42%),
-    radial-gradient(ellipse at 8% 72%, rgba(44, 91, 64, .12) 0 18%, transparent 42%),
-    radial-gradient(ellipse at 92% 62%, rgba(44, 91, 64, .11) 0 18%, transparent 42%),
-    linear-gradient(180deg, #f8f5e7 0%, #eef1e5 48%, #dbe8dc 100%);
+    radial-gradient(ellipse at 50% 60%, rgba(255,255,247,.9) 0 18%, transparent 50%),
+    radial-gradient(ellipse at 15% 70%, rgba(80,119,91,.10) 0 24%, transparent 48%),
+    radial-gradient(ellipse at 85% 76%, rgba(67,103,81,.10) 0 22%, transparent 45%),
+    linear-gradient(180deg,#fbf7e9 0%,#f4f2df 28%,#e7eee1 62%,#d8e5d9 100%) !important;
 }
 
-.cleanroom-join-content {
-  width: min(100%, 680px);
+.cleanroom-approved-lobby::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  z-index: 0;
+  border: 1px solid rgba(184,148,75,.45);
+  box-shadow: inset 0 0 0 3px rgba(255,250,226,.5);
+  pointer-events: none;
 }
 
-.cleanroom-brand {
-  display: flex;
+.cleanroom-approved-lobby::after {
+  content: "";
+  position: absolute;
+  left: -8%; right: -8%; bottom: -1%;
+  height: 260px;
+  z-index: 0;
+  opacity: .36;
+  background:
+    linear-gradient(152deg, transparent 0 40%, rgba(60,99,77,.25) 41% 47%, transparent 48%) 0 30px/230px 190px repeat-x,
+    linear-gradient(28deg, transparent 0 44%, rgba(81,114,91,.22) 45% 51%, transparent 52%) 80px 50px/260px 180px repeat-x,
+    repeating-radial-gradient(ellipse at 50% 100%, transparent 0 23px, rgba(64,112,96,.23) 24px 26px, transparent 27px 43px);
+  pointer-events: none;
+}
+
+.cleanroom-approved-lobby .cleanroom-join-content {
+  position: relative;
+  z-index: 4;
+  width: min(100%, 620px) !important;
+  margin: 0 auto;
+  padding-top: 0 !important;
+}
+
+.cleanroom-approved-lobby .cleanroom-brand {
+  display: flex !important;
+  width: 100%;
+  margin: 2px auto 28px !important;
   flex-direction: column;
   align-items: center;
-  width: 100%;
-  margin: 4px auto 24px;
 }
 
-.cleanroom-emblem {
-  flex: 0 0 auto;
-  width: 250px;
-  height: 205px;
-  margin: 0 auto 12px;
+.cleanroom-approved-lobby .cleanroom-emblem {
+  position: relative;
+  width: 238px !important;
+  height: 184px !important;
+  margin: 0 auto 24px !important;
+  flex: none;
+  filter: drop-shadow(0 10px 10px rgba(106,46,20,.18));
 }
 
-.cleanroom-game-title {
+.cleanroom-approved-lobby .cleanroom-emblem::after {
+  content: "掼";
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  z-index: 8;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  transform: translateX(-50%);
+  border: 3px solid #e2b24e;
+  border-radius: 50%;
+  background: #9d2119;
+  box-shadow: 0 2px 0 #6f160f, inset 0 0 0 2px rgba(255,229,151,.2);
+  color: #f5d06c;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.cleanroom-approved-lobby .cleanroom-emblem-title {
+  top: 75px !important;
+  width: 202px !important;
+  padding: 7px 0 11px !important;
+  border-color: #e1ad45 !important;
+  background: linear-gradient(180deg,#c33224 0%,#a31e18 55%,#821613 100%) !important;
+  box-shadow: inset 0 0 0 2px #74120f, 0 4px 0 #6c2118, 0 8px 16px rgba(100,35,20,.20) !important;
+  color: #f5d57b !important;
+  font-size: 48px !important;
+}
+
+.cleanroom-approved-lobby .cleanroom-card-fan { top: 0 !important; }
+.cleanroom-approved-lobby .cleanroom-fan-card {
+  width: 49px !important;
+  height: 70px !important;
+  background: linear-gradient(145deg,#fffef5,#f2dda2) !important;
+  border-color: #d7ae55 !important;
+}
+
+.cleanroom-approved-lobby .cleanroom-game-title {
   position: relative;
   z-index: 7;
-  flex: 0 0 auto;
   margin: 0 !important;
-  padding-top: 4px;
-  font-size: clamp(38px, 7vw, 54px);
-  line-height: 1.18;
+  padding: 0 !important;
+  color: #294f36 !important;
+  font-size: clamp(40px,7vw,53px) !important;
+  font-weight: 800 !important;
+  letter-spacing: 9px !important;
+  line-height: 1.1 !important;
+  text-indent: 9px;
 }
 
-.cleanroom-game-title-en {
-  margin-top: 7px;
+.cleanroom-approved-lobby .cleanroom-game-title-en {
+  margin-top: 10px !important;
+  color: #9b6731 !important;
+  font-size: 18px !important;
+  letter-spacing: 2.5px !important;
 }
 
-.cleanroom-game-tagline {
-  margin-top: 7px;
+.cleanroom-approved-lobby .cleanroom-game-title-en::before,
+.cleanroom-approved-lobby .cleanroom-game-title-en::after {
+  width: 62px !important;
+  background: linear-gradient(90deg,transparent,#b48e52,transparent) !important;
 }
 
-.cleanroom-join-card {
-  width: min(100%, 560px);
-  border-radius: 18px;
-  border-color: rgba(181, 145, 76, .52);
-  background: rgba(255, 254, 248, .97);
+.cleanroom-approved-lobby .cleanroom-game-tagline {
+  margin: 9px 0 0 !important;
+  color: #6d756d !important;
+  font-size: 14px !important;
+  letter-spacing: 2px !important;
 }
+
+.cleanroom-approved-lobby .cleanroom-join-card {
+  position: relative;
+  width: min(100%, 500px) !important;
+  margin: 18px auto 0 !important;
+  padding: 30px 26px 26px !important;
+  border: 1px solid rgba(185,146,70,.48) !important;
+  border-radius: 15px !important;
+  background: rgba(255,254,246,.96) !important;
+  box-shadow: 0 20px 46px rgba(42,79,56,.13), inset 0 0 35px rgba(215,184,112,.07) !important;
+  backdrop-filter: blur(6px);
+}
+
+.cleanroom-approved-lobby .cleanroom-join-card h2 {
+  margin-bottom: 10px !important;
+  color: #28523a !important;
+  font-size: 29px !important;
+  letter-spacing: 5px !important;
+}
+.cleanroom-approved-lobby .cleanroom-join-card h2::before,
+.cleanroom-approved-lobby .cleanroom-join-card h2::after { color:#c49a45 !important; }
+
+.cleanroom-approved-lobby .cleanroom-join-card label {
+  margin-top: 14px !important;
+  color: #294f39 !important;
+  font-size: 15px !important;
+}
+
+.cleanroom-approved-lobby .cleanroom-join-card input,
+.cleanroom-approved-lobby .cleanroom-join-card select {
+  min-height: 48px !important;
+  border: 1px solid #c8c7b1 !important;
+  border-radius: 9px !important;
+  background: #fffef8 !important;
+  font-size: 17px !important;
+}
+
+.cleanroom-approved-lobby .cleanroom-note {
+  color: #74786f !important;
+  font-size: 12px !important;
+  line-height: 1.55 !important;
+}
+
+.cleanroom-approved-lobby .cleanroom-join-card button {
+  min-height: 64px !important;
+  margin-top: 20px !important;
+  border: 1px solid #cba35b !important;
+  border-radius: 9px !important;
+  background: linear-gradient(180deg,#3b825a 0%,#236a45 100%) !important;
+  box-shadow: inset 0 0 0 2px rgba(247,220,150,.13), 0 5px 12px rgba(43,91,61,.18) !important;
+}
+
+.cleanroom-approved-lobby .cleanroom-hint {
+  margin-top: 17px !important;
+  color: #77796e !important;
+  font-size: 12px !important;
+  line-height: 1.7 !important;
+}
+
+/* Watercolor bamboo on the left. */
+.cleanroom-approved-lobby .cleanroom-bamboo {
+  display: block !important;
+  top: -8px !important;
+  left: -14px !important;
+  width: 170px !important;
+  height: 420px !important;
+  opacity: .42 !important;
+  background:
+    linear-gradient(84deg,transparent 47%,#4a6f4d 48% 51%,transparent 52%) 18px 0/58px 100%,
+    linear-gradient(88deg,transparent 48%,#5b7b57 49% 51%,transparent 52%) 68px 20px/68px 100%,
+    radial-gradient(ellipse at 78% 55%,#54785a 0 21%,transparent 23%) 0 10px/72px 50px,
+    radial-gradient(ellipse at 20% 50%,#668565 0 20%,transparent 22%) 30px 42px/76px 52px !important;
+  transform: rotate(-5deg) !important;
+}
+
+/* Plum branch on the right. */
+.cleanroom-approved-lobby .cleanroom-plum {
+  display: block !important;
+  top: 18px !important;
+  right: -16px !important;
+  width: 220px !important;
+  height: 260px !important;
+  opacity: .72 !important;
+  background:
+    radial-gradient(circle,#a83f34 0 10%,#e9a78d 11% 23%,transparent 25%) 42px 12px/47px 47px,
+    radial-gradient(circle,#b44a3c 0 10%,#efb199 11% 23%,transparent 25%) 104px 38px/52px 52px,
+    radial-gradient(circle,#a63a31 0 10%,#eaa78f 11% 23%,transparent 25%) 150px 8px/49px 49px,
+    radial-gradient(circle,#b64b3e 0 10%,#efb199 11% 23%,transparent 25%) 78px 94px/43px 43px,
+    linear-gradient(143deg,transparent 48%,#654936 49% 51%,transparent 52%) !important;
+}
+
+.cleanroom-approved-lobby .cleanroom-lantern {
+  display: block !important;
+  top: 168px !important;
+  right: 10% !important;
+  opacity: .58 !important;
+}
+
+/* Misty mountains flank the join card. */
+.cleanroom-approved-lobby .cleanroom-mountains {
+  display: block !important;
+  bottom: 7% !important;
+  height: 38% !important;
+  opacity: .16 !important;
+}
+.cleanroom-approved-lobby .cleanroom-mountains-left { left:-5% !important; }
+.cleanroom-approved-lobby .cleanroom-mountains-right { right:-5% !important; }
+.cleanroom-approved-lobby .cleanroom-waves { display:block !important; opacity:.18 !important; }
 
 @media (max-width: 600px) {
-  .cleanroom-join-shell {
-    padding: 14px 10px 32px;
-  }
-
-  .cleanroom-brand {
-    margin: 0 auto 18px;
-  }
-
-  .cleanroom-emblem {
-    width: 210px;
-    height: 178px;
-    margin-bottom: 10px;
-    transform: scale(.92);
-    transform-origin: center bottom;
-  }
-
-  .cleanroom-game-title {
-    margin-top: 0 !important;
-    padding-top: 6px;
-    font-size: 38px;
-    letter-spacing: 5px;
-    text-indent: 5px;
-    line-height: 1.2;
-  }
-
-  .cleanroom-game-title-en {
-    margin-top: 5px;
-    font-size: 16px;
-  }
-
-  .cleanroom-game-title-en::before,
-  .cleanroom-game-title-en::after {
-    width: 34px;
-  }
-
-  .cleanroom-game-tagline {
-    margin-top: 5px;
-    font-size: 12px;
-    letter-spacing: 1px;
-  }
-
-  .cleanroom-join-card {
-    width: 100%;
-    padding: 28px 20px 24px;
-    border-radius: 18px;
-  }
+  .cleanroom-join-shell.cleanroom-approved-lobby { padding: 12px 10px 38px !important; }
+  .cleanroom-approved-lobby::before { inset: 7px; }
+  .cleanroom-approved-lobby .cleanroom-brand { margin-bottom: 20px !important; }
+  .cleanroom-approved-lobby .cleanroom-emblem { width: 216px !important; height: 171px !important; margin-bottom: 22px !important; transform: none !important; }
+  .cleanroom-approved-lobby .cleanroom-emblem-title { top: 68px !important; width: 190px !important; font-size: 45px !important; }
+  .cleanroom-approved-lobby .cleanroom-card-fan { transform: translateX(-50%) scale(.92); transform-origin:center bottom; }
+  .cleanroom-approved-lobby .cleanroom-game-title { font-size: 38px !important; letter-spacing: 7px !important; text-indent: 7px !important; }
+  .cleanroom-approved-lobby .cleanroom-game-title-en { margin-top: 8px !important; font-size: 15px !important; }
+  .cleanroom-approved-lobby .cleanroom-game-title-en::before,
+  .cleanroom-approved-lobby .cleanroom-game-title-en::after { width: 36px !important; }
+  .cleanroom-approved-lobby .cleanroom-game-tagline { margin-top: 7px !important; font-size: 11px !important; letter-spacing: 1px !important; }
+  .cleanroom-approved-lobby .cleanroom-join-card { width: calc(100% - 10px) !important; margin-top: 16px !important; padding: 25px 20px 23px !important; border-radius: 13px !important; }
+  .cleanroom-approved-lobby .cleanroom-join-card h2 { font-size: 25px !important; }
+  .cleanroom-approved-lobby .cleanroom-bamboo { left:-50px !important; width:145px !important; height:360px !important; opacity:.34 !important; }
+  .cleanroom-approved-lobby .cleanroom-plum { right:-72px !important; width:190px !important; height:220px !important; opacity:.55 !important; }
+  .cleanroom-approved-lobby .cleanroom-lantern { right:4% !important; top:150px !important; transform:scale(.82); }
+  .cleanroom-approved-lobby .cleanroom-mountains { opacity:.12 !important; }
 }
 
 @media (max-width: 390px) {
-  .cleanroom-emblem {
-    height: 170px;
-    transform: scale(.86);
-  }
-
-  .cleanroom-game-title {
-    font-size: 34px;
-  }
+  .cleanroom-approved-lobby .cleanroom-emblem { width: 204px !important; height: 164px !important; }
+  .cleanroom-approved-lobby .cleanroom-emblem-title { width: 180px !important; font-size: 42px !important; }
+  .cleanroom-approved-lobby .cleanroom-game-title { font-size: 35px !important; }
+  .cleanroom-approved-lobby .cleanroom-join-card { width: 100% !important; }
 }
