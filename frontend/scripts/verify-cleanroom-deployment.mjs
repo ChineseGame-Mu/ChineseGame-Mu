@@ -26,11 +26,10 @@ const inspect = async () => {
   }
   const joined = bundleTexts.join("\n");
 
-  // Use ASCII runtime literals that survive production minification and Unicode escaping.
-  // Chinese UI wording is validated in focused React tests, not by byte-grepping minified JS.
+  // Use runtime literals from the current final-art lobby implementation.
   const requiredMarkers = [
     "ENTER ROOM",
-    "cleanroom-join-shell",
+    "cleanroom-final-shell",
     "cleanroomRoom",
     "card-games-yihua.onrender.com/api/guandan",
     ".vercel.app",
