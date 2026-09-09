@@ -48,7 +48,7 @@ jobs:
           grep -F 'return `cr-${deploymentKey}-${room}`;' "$WS"
           echo "::notice::0001-0004 remain deployment-scoped; a new immutable deployment uses a different backend room namespace from the stale deployment."
 
-      - name: Mandatory visible room-number privacy contract
+      - name: Mandatory single visible public room-number contract
         shell: bash
         run: |
           set -euo pipefail
@@ -63,19 +63,31 @@ jobs:
           grep -F 'return /^000[1-4]$/.test(room) ? room : "";' "$HEADER"
           grep -F 'className="guandan-header-visible-room"' "$HEADER"
           grep -F '房间：{visibleRoom}' "$HEADER"
-          grep -F '.guandan-status-bar > div:nth-of-type(2) { display: none !important; }' "$CSS"
+
+          # The legacy server-provided room node may contain cr-<commit>-000N, but it must
+          # be forcibly hidden with a high-specificity rule so it can never appear beside 掼蛋.
+          grep -F '#root .guandan-table > .guandan-status-bar > div:nth-child(3),' "$CSS"
+          grep -F '#root .guandan-table > .guandan-status-bar > div:nth-of-type(2) {' "$CSS"
+          grep -F 'display: none !important;' "$CSS"
+          grep -F 'visibility: hidden !important;' "$CSS"
+          grep -F 'opacity: 0 !important;' "$CSS"
           grep -F '.guandan-header-visible-room {' "$CSS"
           grep -F '{state.room !== null && <div>房间：{state.room}</div>}' "$TABLE"
 
+          public_label_count=$(grep -F -c '房间：{visibleRoom}' "$HEADER")
+          if [ "$public_label_count" -ne 1 ]; then
+            echo "::error::Exactly one public room label renderer is required; found $public_label_count."
+            exit 1
+          fi
           if grep -F '房间：{state.room}' "$HEADER"; then
-            echo "::error::Public header must never display the internal commit-scoped room id."
+            echo "::error::Public decorative header must never display the internal commit-scoped room id."
             exit 1
           fi
           if grep -E 'guandan-header-visible-room[^\n]*cr-' "$HEADER"; then
             echo "::error::Public room label must never expose a cr- deployment namespace."
             exit 1
           fi
-          echo "::notice::Players must see only room 0001-0004 beside Settings; internal cr-<commit>-000N remains hidden and is used only for backend isolation."
+          echo "::notice::Exactly one player-visible room label is permitted: 房间：0001-0004. The internal cr-<commit>-000N node must remain invisible."
 
       - name: Mandatory no-old-room-data QA policy
         shell: bash
