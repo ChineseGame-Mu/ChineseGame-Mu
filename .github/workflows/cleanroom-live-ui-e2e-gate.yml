@@ -1,0 +1,174 @@
+name: Cleanroom Live UI + E2E Gate
+
+on:
+  push:
+    branches:
+      - cleanroom/yihua-game-20260826
+  workflow_dispatch:
+
+jobs:
+  live-ui-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      FRONTEND_URL: https://yihua-mu.vercel.app
+      WS_URL: wss://card-games-yihua.onrender.com/api/guandan
+      EXPECTED_COMMIT: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install browser QA runtime
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Mandatory short-link freshness and room-selector UI contract
+        run: |
+          node --input-type=module <<'NODE'
+          import { chromium } from 'playwright';
+          const expectedRooms = ['0001','0002','0003','0004'];
+          const expectedCommit = process.env.EXPECTED_COMMIT;
+          const browser = await chromium.launch({headless:true});
+          const page = await browser.newPage();
+
+          let actualCommit = null;
+          for (let attempt = 1; attempt <= 24; attempt++) {
+            const response = await page.goto(process.env.FRONTEND_URL, {waitUntil:'domcontentloaded', timeout:60000});
+            if (!response || !response.ok()) throw new Error(`live frontend HTTP ${response?.status()}`);
+            await page.waitForTimeout(1500);
+            actualCommit = await page.locator('html').getAttribute('data-cleanroom-commit');
+            console.log(JSON.stringify({type:'short_link_commit_probe',attempt,expectedCommit,actualCommit,url:page.url()}));
+            if (actualCommit === expectedCommit) break;
+            if (attempt < 24) await page.waitForTimeout(10000);
+          }
+          if (actualCommit !== expectedCommit) {
+            throw new Error(`short link is stale: expected ${expectedCommit}, got ${actualCommit}`);
+          }
+
+          const selector = page.locator('#cleanroom-room');
+          await selector.waitFor({state:'visible', timeout:30000});
+          const tagName = await selector.evaluate(el => el.tagName);
+          if (tagName !== 'SELECT') throw new Error(`room control must be SELECT, got ${tagName}`);
+
+          const options = await selector.locator('option').evaluateAll(nodes => nodes.map(n => n.value));
+          if (JSON.stringify(options) !== JSON.stringify(expectedRooms)) {
+            throw new Error(`room options must be exactly ${expectedRooms.join(',')}; got ${options.join(',')}`);
+          }
+
+          const freeRoomInputs = await page.locator('input#cleanroom-room, input[name="room"], input[name="cleanroomRoom"]').count();
+          if (freeRoomInputs !== 0) throw new Error(`free-text room input detected: ${freeRoomInputs}`);
+
+          await selector.selectOption('0001');
+          await page.locator('#cleanroom-player-name').fill('UI-QA-NONJOIN');
+          if (new URL(page.url()).searchParams.get('room') !== null) {
+            throw new Error('UI contract check unexpectedly entered a fixed room');
+          }
+
+          console.log(JSON.stringify({type:'live_ui_gate_pass',frontend:process.env.FRONTEND_URL,expectedCommit,actualCommit,roomControl:'select',rooms:options,freeTextRoomInput:false,fixedRoomJoinPerformed:false}));
+          await browser.close();
+          NODE
+
+      - name: Real live WebSocket gameplay E2E in disposable room
+        run: |
+          node --input-type=module <<'NODE'
+          const WS_URL = process.env.WS_URL;
+          const room = `ui-e2e-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+          const timeout = (ms, label) => new Promise((_, rej) => setTimeout(() => rej(new Error(`timeout: ${label}`)), ms));
+
+          class Client {
+            constructor(name){ this.name=name; this.ws=null; this.messages=[]; this.waiters=[]; this.seat=null; }
+            async connect(){
+              this.ws = new WebSocket(WS_URL);
+              this.ws.addEventListener('message', e => {
+                const m = JSON.parse(String(e.data));
+                this.messages.push(m);
+                for (const w of [...this.waiters]) {
+                  if (this.messages.length > w.after && w.pred(m)) {
+                    this.waiters.splice(this.waiters.indexOf(w),1);
+                    w.resolve(m);
+                  }
+                }
+              });
+              await Promise.race([
+                new Promise((resolve,reject)=>{
+                  this.ws.addEventListener('open',resolve,{once:true});
+                  this.ws.addEventListener('error',()=>reject(new Error('websocket open error')),{once:true});
+                }),
+                timeout(15000,'websocket open')
+              ]);
+              return this.waitNew(m=>m.type==='connected',0,15000);
+            }
+            send(m){
+              if (!this.ws || this.ws.readyState !== WebSocket.OPEN) throw new Error(`${this.name}: socket not open`);
+              this.ws.send(JSON.stringify(m));
+            }
+            waitNew(pred, after=this.messages.length, ms=15000){
+              for (let i=after;i<this.messages.length;i++) if (pred(this.messages[i])) return Promise.resolve(this.messages[i]);
+              return Promise.race([new Promise(resolve=>this.waiters.push({pred,resolve,after})),timeout(ms,`${this.name} message`)]);
+            }
+            close(){ try{ this.ws?.close(); }catch{} }
+          }
+
+          const clients = Array.from({length:4},(_,i)=>new Client(`UIE2E-${i+1}`));
+          const protocols=[];
+          for (const c of clients) protocols.push((await c.connect()).protocol);
+          if (new Set(protocols).size !== 1 || !protocols[0]) throw new Error(`protocol mismatch ${protocols}`);
+
+          for (let i=0;i<4;i++) {
+            const c=clients[i], mark=c.messages.length;
+            c.send({type:'join',room,name:c.name,player_count:4,desired_seat:i});
+            const joined=await c.waitNew(m=>m.type==='joined',mark,15000);
+            c.seat=joined.seat;
+            if (joined.room!==room || joined.seat!==i) throw new Error(`join mismatch ${JSON.stringify(joined)}`);
+          }
+
+          const marks=clients.map(c=>c.messages.length);
+          clients[0].send({type:'start',player_count:4});
+          for (let i=0;i<4;i++) {
+            const started=await clients[i].waitNew(m=>m.type==='started' && m.player_count===4,marks[i],20000);
+            if (started.cards_per_player!==27) throw new Error(`cards_per_player ${started.cards_per_player}`);
+            const hand=await clients[i].waitNew(m=>m.type==='hand',marks[i],20000);
+            if (!Array.isArray(hand.cards) || hand.cards.length!==27) throw new Error(`hand count ${hand.cards?.length}`);
+          }
+
+          const trickMarks=clients.map(c=>c.messages.length);
+          clients[0].send({type:'start_trick'});
+          for (let i=0;i<4;i++) await clients[i].waitNew(m=>m.type==='state' && Number.isInteger(m.turn),trickMarks[i],15000);
+          let state=clients.flatMap(c=>c.messages).filter(m=>m.type==='state').at(-1);
+          const seatToClient=new Map(clients.map(c=>[c.seat,c]));
+          const leader=seatToClient.get(state.turn);
+          let mark=leader.messages.length;
+          leader.send({type:'play',card_indexes:[0]});
+          state=await leader.waitNew(m=>m.type==='state' && m.hand_counts?.[leader.seat]===26,mark,20000);
+
+          let passes=0;
+          while (passes<3 && !state.trick_complete) {
+            const active=seatToClient.get(state.turn);
+            mark=active.messages.length;
+            active.send({type:'pass'});
+            state=await active.waitNew(m=>m.type==='state' && (m.trick_complete===true || m.turn!==active.seat),mark,20000);
+            passes++;
+          }
+          if (!state.trick_complete) throw new Error('trick did not complete');
+
+          const target=clients[2];
+          target.close();
+          await new Promise(r=>setTimeout(r,700));
+          const replacement=new Client(target.name);
+          const connected=await replacement.connect();
+          mark=replacement.messages.length;
+          replacement.send({type:'join',room,name:replacement.name,player_count:4,desired_seat:target.seat});
+          const rejoined=await replacement.waitNew(m=>m.type==='joined',mark,20000);
+          const rehand=await replacement.waitNew(m=>m.type==='hand',mark,20000);
+          const restate=await replacement.waitNew(m=>m.type==='state',mark,20000);
+          if (rejoined.seat!==target.seat) throw new Error('reconnect seat changed');
+          if (!Array.isArray(rehand.cards)) throw new Error('reconnect private hand missing');
+          if (!Array.isArray(restate.hand_counts) || restate.hand_counts.length!==4) throw new Error('reconnect state invalid');
+
+          console.log(JSON.stringify({type:'live_e2e_pass',room,protocol:connected.protocol,started:true,cardsPerPlayer:27,leadPlay:true,passes,trickComplete:true,reconnect:true,reconnectSeat:rejoined.seat,reconnectHandCount:rehand.cards.length,fixedRoomsTouched:false}));
+          for (const c of clients) c.close();
+          replacement.close();
+          NODE
