@@ -48,8 +48,8 @@
 }
 
 .cleanroom-final-control {
-  left: 29.75% !important;
-  width: 40.05% !important;
+  left: 30% !important;
+  width: 40% !important;
   border: 1px solid rgba(125, 122, 101, .42) !important;
   border-radius: .52rem !important;
   background-color: rgba(255, 254, 247, .965) !important;
@@ -92,9 +92,9 @@
 
 /* The button artwork already exists in the approved image. Keep the live button as an exact clickable hit-area only, so the reference art remains pixel-faithful. */
 .cleanroom-final-enter {
-  left: 29.75% !important;
+  left: 30% !important;
   top: 75.40% !important;
-  width: 40.05% !important;
+  width: 40% !important;
   height: 7.05% !important;
   border: 0 !important;
   border-radius: .62rem !important;
