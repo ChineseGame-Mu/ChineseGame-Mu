@@ -48,6 +48,35 @@ jobs:
           grep -F 'return `cr-${deploymentKey}-${room}`;' "$WS"
           echo "::notice::0001-0004 remain deployment-scoped; a new immutable deployment uses a different backend room namespace from the stale deployment."
 
+      - name: Mandatory visible room-number privacy contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          HEADER=frontend/src/GuandanHeaderDecor.tsx
+          CSS=frontend/src/cleanroom-device-layout.css
+          TABLE=frontend/src/GuandanTable.tsx
+          test -f "$HEADER"
+          test -f "$CSS"
+          test -f "$TABLE"
+
+          grep -F 'const room = query.get("cleanroomRoom") ?? query.get("room") ?? "";' "$HEADER"
+          grep -F 'return /^000[1-4]$/.test(room) ? room : "";' "$HEADER"
+          grep -F 'className="guandan-header-visible-room"' "$HEADER"
+          grep -F '房间：{visibleRoom}' "$HEADER"
+          grep -F '.guandan-status-bar > div:nth-of-type(2) { display: none !important; }' "$CSS"
+          grep -F '.guandan-header-visible-room {' "$CSS"
+          grep -F '{state.room !== null && <div>房间：{state.room}</div>}' "$TABLE"
+
+          if grep -F '房间：{state.room}' "$HEADER"; then
+            echo "::error::Public header must never display the internal commit-scoped room id."
+            exit 1
+          fi
+          if grep -E 'guandan-header-visible-room[^\n]*cr-' "$HEADER"; then
+            echo "::error::Public room label must never expose a cr- deployment namespace."
+            exit 1
+          fi
+          echo "::notice::Players must see only room 0001-0004 beside Settings; internal cr-<commit>-000N remains hidden and is used only for backend isolation."
+
       - name: Mandatory no-old-room-data QA policy
         shell: bash
         run: |
