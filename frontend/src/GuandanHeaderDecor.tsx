@@ -4,6 +4,11 @@ import type { JSX } from "react";
 
 const GuandanHeaderDecor = (): JSX.Element => {
   const [now, setNow] = React.useState(() => new Date());
+  const visibleRoom = React.useMemo(() => {
+    const query = new URLSearchParams(window.location.search);
+    const room = query.get("cleanroomRoom") ?? query.get("room") ?? "";
+    return /^000[1-4]$/.test(room) ? room : "";
+  }, []);
 
   React.useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
@@ -44,6 +49,10 @@ const GuandanHeaderDecor = (): JSX.Element => {
           </span>
         </div>
       </div>
+
+      {visibleRoom !== "" && (
+        <div className="guandan-header-visible-room">房间：{visibleRoom}</div>
+      )}
 
       <div className="guandan-header-clock" role="timer" aria-label={time}>
         <span className="guandan-stopwatch" aria-hidden="true">
