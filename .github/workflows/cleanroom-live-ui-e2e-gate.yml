@@ -20,6 +20,39 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Mandatory public-table full-play rendering regression guard
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const path = 'frontend/src/GuandanTable.tsx';
+          const source = fs.readFileSync(path, 'utf8');
+          const start = source.indexOf('state.tablePlays.map');
+          if (start < 0) throw new Error('public table no longer renders state.tablePlays');
+          const end = source.indexOf('state.trickComplete', start);
+          if (end < 0) throw new Error('cannot locate public table play render block');
+          const block = source.slice(start, end);
+
+          if (!/play\.cards\.map\s*\(/.test(block)) {
+            throw new Error('public table must render every card from play.cards');
+          }
+          if (/\.slice\s*\(\s*0\s*,\s*4\s*\)/.test(block) || /\.slice\s*\(\s*-?4\s*\)/.test(block)) {
+            throw new Error('public table must not truncate a play to four cards');
+          }
+          if (/marginRight\s*:\s*-\d+/.test(block) || /margin-left\s*:\s*-\d+/i.test(block)) {
+            throw new Error('public table cards must not use negative overlap that hides played cards');
+          }
+          if (/max(?:imum)?(?:Visible|Cards|Count)\s*[:=]\s*4/i.test(block)) {
+            throw new Error('public table must not cap visible played cards at four');
+          }
+
+          console.log(JSON.stringify({
+            type: 'public_table_full_play_source_guard_pass',
+            rendersAllPlayCards: true,
+            fourCardTruncation: false,
+            negativeOverlap: false,
+          }));
+          NODE
+
       - name: Install browser QA runtime
         run: |
           npm install --no-save playwright@1.55.0
@@ -61,8 +94,6 @@ jobs:
           const freeRoomInputs = await page.locator('input#cleanroom-room, input[name="room"], input[name="cleanroomRoom"]').count();
           if (freeRoomInputs !== 0) throw new Error(`free-text room input detected: ${freeRoomInputs}`);
 
-          // QA must never submit one of the fixed public rooms. This prevents QA
-          // from leaving players, hands, tricks, or old state in 0001-0004.
           await selector.selectOption('0001');
           await page.locator('#cleanroom-player-name').fill('UI-QA-NONJOIN');
           if (new URL(page.url()).searchParams.get('room') !== null) {
