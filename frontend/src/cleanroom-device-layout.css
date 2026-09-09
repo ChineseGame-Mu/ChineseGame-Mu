@@ -65,10 +65,36 @@ html[data-guandan-player-count="14"] .guandan-public-player-back:nth-child(n + 1
   display: none !important;
 }
 
-/* Put the settings button immediately to the left of the top-right timer. */
+/* Keep room number visible immediately to the left of Settings.
+ * Header DOM order is: title, connection status, room, settings button.
+ */
 .guandan-status-bar {
   position: relative !important;
 }
+.guandan-status-bar > div:nth-of-type(2) {
+  position: absolute !important;
+  top: 9px !important;
+  right: 274px !important;
+  left: auto !important;
+  z-index: 1301 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 118px !important;
+  height: 42px !important;
+  margin: 0 !important;
+  padding: 0 12px !important;
+  border-radius: 12px !important;
+  white-space: nowrap !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-weight: 900 !important;
+  background: rgba(3, 78, 54, 0.92) !important;
+  border: 1px solid rgba(255, 215, 96, 0.8) !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,.9) !important;
+}
+
+/* Put the settings button immediately to the left of the top-right timer. */
 .guandan-status-bar > button.normal {
   position: absolute !important;
   top: 9px !important;
@@ -131,6 +157,7 @@ html[data-guandan-player-count="14"] .guandan-public-player-back:nth-child(n + 1
     padding-right: 12px !important;
   }
   .guandan-status-bar > button.normal { right: 164px !important; }
+  .guandan-status-bar > div:nth-of-type(2) { right: 258px !important; }
 }
 
 @media (min-width: 641px) and (max-width: 900px) {
@@ -164,6 +191,11 @@ html[data-guandan-player-count="14"] .guandan-public-player-back:nth-child(n + 1
   .guandan-private-zone > section.guandan-play-actions > button:last-child { right: 7px !important; }
   .guandan-public-player-backs { max-width: 64% !important; }
   .guandan-status-bar > button.normal { right: 150px !important; min-width: 84px !important; }
+  .guandan-status-bar > div:nth-of-type(2) {
+    right: 244px !important;
+    min-width: 104px !important;
+    font-size: 13px !important;
+  }
   .guandan-settings.guandan-panel {
     top: 60px !important;
     right: 8px !important;
@@ -206,6 +238,14 @@ html[data-guandan-player-count="14"] .guandan-public-player-back:nth-child(n + 1
     height: 38px !important;
     padding: 0 9px !important;
     font-size: 13px !important;
+  }
+  .guandan-status-bar > div:nth-of-type(2) {
+    top: 7px !important;
+    right: 202px !important;
+    min-width: 88px !important;
+    height: 38px !important;
+    padding: 0 7px !important;
+    font-size: 11px !important;
   }
   .guandan-public-zone,
   .guandan-private-zone { min-height: 260px; }
