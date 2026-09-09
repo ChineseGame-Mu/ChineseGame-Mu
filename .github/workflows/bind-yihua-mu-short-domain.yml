@@ -1,0 +1,45 @@
+name: Bind yihua-mu Short Domain to Cleanroom
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bind-short-domain:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require Vercel token
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "VERCEL_TOKEN secret is missing. Add it in GitHub Actions secrets, then rerun this workflow."
+            exit 1
+          fi
+
+      - name: Bind yihua-mu.vercel.app to cleanroom branch
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          RESPONSE=$(curl -sS -X PATCH \
+            "https://api.vercel.com/v9/projects/prj_BgRBlKnTVrg2X1JAeOkGzF6D4uy7/domains/yihua-mu.vercel.app?teamId=team_ywV2nAFgiVpPMY1QLXo9t2ca" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"gitBranch":"cleanroom/yihua-game-20260826"}')
+          echo "$RESPONSE" > /tmp/vercel-domain.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const body = JSON.parse(fs.readFileSync('/tmp/vercel-domain.json','utf8'));
+          if (body.error) throw new Error(JSON.stringify(body.error));
+          if (body.name !== 'yihua-mu.vercel.app') throw new Error(`unexpected domain: ${body.name}`);
+          if (body.gitBranch !== 'cleanroom/yihua-game-20260826') {
+            throw new Error(`domain branch mismatch: ${body.gitBranch}`);
+          }
+          console.log(JSON.stringify({type:'short_domain_bound',domain:body.name,gitBranch:body.gitBranch,verified:body.verified}));
+          NODE
+
+      - name: Verify short domain responds
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 12 --retry-delay 5 https://yihua-mu.vercel.app/ >/dev/null
+          echo "Short domain responds. Full browser freshness remains enforced by Cleanroom QA."
