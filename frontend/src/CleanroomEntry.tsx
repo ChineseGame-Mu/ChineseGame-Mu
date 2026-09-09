@@ -17,6 +17,7 @@ import ExitGameButton from "./ExitGameButton";
 import "./cleanroom-hand-stack-fix.css";
 import "./cleanroom-initial-draw-position.css";
 import "./cleanroom-lobby-artwork.css";
+import "./cleanroom-lobby-polish.css";
 import "./cleanroom-device-layout.css";
 import "./cleanroom-public-player-names.css";
 
@@ -165,14 +166,8 @@ const CleanroomEntry = (): JSX.Element => {
       <div className="cleanroom-bamboo" aria-hidden="true" />
       <div className="cleanroom-plum" aria-hidden="true" />
       <div className="cleanroom-lantern" aria-hidden="true" />
-      <div
-        className="cleanroom-mountains cleanroom-mountains-left"
-        aria-hidden="true"
-      />
-      <div
-        className="cleanroom-mountains cleanroom-mountains-right"
-        aria-hidden="true"
-      />
+      <div className="cleanroom-mountains cleanroom-mountains-left" aria-hidden="true" />
+      <div className="cleanroom-mountains cleanroom-mountains-right" aria-hidden="true" />
       <div className="cleanroom-waves" aria-hidden="true" />
 
       <div className="cleanroom-join-content">
@@ -185,43 +180,20 @@ const CleanroomEntry = (): JSX.Element => {
           <h2>加入牌室</h2>
           <form onSubmit={submit}>
             <label htmlFor="cleanroom-room">牌室</label>
-            <select
-              id="cleanroom-room"
-              value={roomId}
-              onChange={(event) =>
-                setRoomId(event.target.value as SelectableRoom)
-              }
-            >
+            <select id="cleanroom-room" value={roomId} onChange={(event) => setRoomId(event.target.value as SelectableRoom)}>
               {selectableRooms.map((room) => (
-                <option key={room} value={room}>
-                  {room}
-                </option>
+                <option key={room} value={room}>{room}</option>
               ))}
             </select>
             <label htmlFor="cleanroom-player-count">开始人数：4–14 人</label>
-            <select
-              id="cleanroom-player-count"
-              value={playerCount}
-              onChange={(event) => setPlayerCount(Number(event.target.value))}
-            >
+            <select id="cleanroom-player-count" value={playerCount} onChange={(event) => setPlayerCount(Number(event.target.value))}>
               {supportedCounts.map((count) => (
-                <option key={count} value={count}>
-                  {count} 人
-                </option>
+                <option key={count} value={count}>{count} 人</option>
               ))}
             </select>
-            <p className="cleanroom-note">
-              第一位进入的玩家确定开始人数；之后可继续增加到 14 人。
-            </p>
+            <p className="cleanroom-note">第一位进入的玩家确定开始人数；之后可继续增加到 14 人。</p>
             <label htmlFor="cleanroom-player-name">您的姓名</label>
-            <input
-              id="cleanroom-player-name"
-              value={name}
-              maxLength={10}
-              placeholder="请输入姓名"
-              autoFocus
-              onChange={(event) => setName(event.target.value)}
-            />
+            <input id="cleanroom-player-name" value={name} maxLength={10} placeholder="请输入姓名" autoFocus onChange={(event) => setName(event.target.value)} />
             <button type="submit" disabled={name.trim() === ""}>
               <span>进入牌室</span>
               <small>ENTER ROOM</small>
