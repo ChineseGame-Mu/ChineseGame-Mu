@@ -65,9 +65,25 @@ html[data-guandan-player-count="14"] .guandan-public-player-back:nth-child(n + 1
   display: none !important;
 }
 
-/* The server room remains commit-scoped internally, but users only see 0001-0004. */
+/* The server room remains commit-scoped internally, but users only see 0001-0004.
+ * The legacy server-room node is the third child of the status bar. Keep this
+ * high-specificity guard so no later theme rule can make cr-<commit>-000N visible.
+ */
 .guandan-status-bar { position: relative !important; }
-.guandan-status-bar > div:nth-of-type(2) { display: none !important; }
+#root .guandan-table > .guandan-status-bar > div:nth-child(3),
+#root .guandan-table > .guandan-status-bar > div:nth-of-type(2) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  min-width: 0 !important;
+  width: 0 !important;
+  max-width: 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
 .guandan-header-visible-room {
   position: fixed !important;
   top: 9px !important;
