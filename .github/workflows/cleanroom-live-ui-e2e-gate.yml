@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     env:
-      FRONTEND_URL: https://yihua-mu-git-cleanroom-yihua-game-20260826-chinese-game.vercel.app
+      FRONTEND_URL: https://yihua-mu.vercel.app
       WS_URL: wss://card-games-yihua.onrender.com/api/guandan
       EXPECTED_COMMIT: ${{ github.sha }}
     steps:
@@ -24,8 +24,8 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          const path = 'frontend/src/GuandanTable.tsx';
-          const source = fs.readFileSync(path, 'utf8');
+          const source = fs.readFileSync('frontend/src/GuandanTable.tsx', 'utf8');
+          const css = fs.readFileSync('frontend/src/cleanroom-public-player-names.css', 'utf8');
           const start = source.indexOf('state.tablePlays.map');
           if (start < 0) throw new Error('public table no longer renders state.tablePlays');
           const end = source.indexOf('state.trickComplete', start);
@@ -38,18 +38,25 @@ jobs:
           if (/\.slice\s*\(\s*0\s*,\s*4\s*\)/.test(block) || /\.slice\s*\(\s*-?4\s*\)/.test(block)) {
             throw new Error('public table must not truncate a play to four cards');
           }
-          if (/marginRight\s*:\s*-\d+/.test(block) || /margin-left\s*:\s*-\d+/i.test(block)) {
-            throw new Error('public table cards must not use negative overlap that hides played cards');
-          }
           if (/max(?:imum)?(?:Visible|Cards|Count)\s*[:=]\s*4/i.test(block)) {
             throw new Error('public table must not cap visible played cards at four');
+          }
+          if (!/\.guandan-table-play\s*>\s*span[\s\S]*margin-right:\s*0\s*!important/i.test(css)) {
+            throw new Error('public table CSS must explicitly cancel legacy negative card overlap');
+          }
+          if (!/\.guandan-table-play[\s\S]*display:\s*inline-flex\s*!important/i.test(css)) {
+            throw new Error('public table play row must use a non-clipping flex layout');
+          }
+          if (!/\.guandan-public-player-seat[\s\S]*color:\s*#ffffff\s*!important/i.test(css)) {
+            throw new Error('public-table player labels must stay white for contrast');
           }
 
           console.log(JSON.stringify({
             type: 'public_table_full_play_source_guard_pass',
             rendersAllPlayCards: true,
             fourCardTruncation: false,
-            negativeOverlap: false,
+            publicCardOverlapCancelled: true,
+            playerLabelsWhite: true,
           }));
           NODE
 
