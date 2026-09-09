@@ -1,23 +1,20 @@
-/* Approved lobby artwork is rendered as live DOM/CSS, never as the stale composite background. */
-.cleanroom-approved-lobby {
-  min-height: 100vh;
-  overflow-x: hidden;
-  overflow-y: auto;
-  padding: 18px 18px 48px;
-  background:
-    radial-gradient(circle at 82% 12%, rgba(190, 75, 72, .13) 0 3px, transparent 4px) 0 0/34px 34px,
-    linear-gradient(180deg, rgba(250,248,232,.96), rgba(232,239,224,.96));
-}
-.cleanroom-approved-lobby .cleanroom-join-content { width: min(100%, 680px); padding-top: 0 !important; margin: 0 auto; }
-.cleanroom-approved-lobby .cleanroom-brand { display: flex !important; }
-.cleanroom-approved-lobby .cleanroom-emblem { margin-bottom: 22px !important; }
-.cleanroom-approved-lobby .cleanroom-game-title { margin-top: 0 !important; position: relative; z-index: 3; }
-.cleanroom-approved-lobby .cleanroom-join-card { margin-top: 24px; }
-@media (max-width: 600px) {
-  .cleanroom-approved-lobby { padding: 12px 10px 36px; }
-  .cleanroom-approved-lobby .cleanroom-join-content { padding-top: 0 !important; }
-  .cleanroom-approved-lobby .cleanroom-brand { display: flex !important; margin-bottom: 18px; }
-  .cleanroom-approved-lobby .cleanroom-emblem { height: 178px; margin-bottom: 24px !important; }
-  .cleanroom-approved-lobby .cleanroom-game-title { margin-top: 0 !important; line-height: 1.2; }
-  .cleanroom-approved-lobby .cleanroom-join-card { margin-top: 18px; }
-}
+/* Final visual layer: force the full interactive lobby visible above the scenery. */
+.cleanroom-join-shell.cleanroom-approved-lobby{min-height:100vh;overflow-x:hidden;overflow-y:auto;padding:18px 12px 56px!important;background:linear-gradient(180deg,#fbf6e7 0%,#eef3e8 58%,#d6e8df 100%)!important}
+.cleanroom-approved-lobby .cleanroom-join-content{position:relative!important;z-index:20!important;width:min(100%,680px)!important;margin:0 auto!important;padding:0!important;display:block!important;visibility:visible!important;opacity:1!important}
+.cleanroom-approved-lobby .cleanroom-brand{display:flex!important;visibility:visible!important;opacity:1!important;position:relative!important;z-index:22!important;flex-direction:column!important;align-items:center!important;margin:0 auto 22px!important;min-height:390px!important}
+.cleanroom-approved-lobby .cleanroom-emblem{display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;margin:0 auto 14px!important;width:260px!important;height:196px!important}
+.cleanroom-approved-lobby .cleanroom-card-fan,.cleanroom-approved-lobby .cleanroom-emblem-title,.cleanroom-approved-lobby .cleanroom-game-title,.cleanroom-approved-lobby .cleanroom-game-title-en,.cleanroom-approved-lobby .cleanroom-game-tagline{display:block!important;visibility:visible!important;opacity:1!important}
+.cleanroom-approved-lobby .cleanroom-game-title{position:relative!important;z-index:23!important;margin:0!important;color:#174b37!important;font-size:52px!important;line-height:1.12!important;letter-spacing:8px!important;text-indent:8px!important;font-weight:800!important}
+.cleanroom-approved-lobby .cleanroom-game-title-en{position:relative!important;z-index:23!important;margin-top:10px!important;color:#9b6935!important;font:700 20px Georgia,serif!important;letter-spacing:4px!important}
+.cleanroom-approved-lobby .cleanroom-game-tagline{position:relative!important;z-index:23!important;margin:10px 0 0!important;color:#5e6c63!important;font-size:15px!important;letter-spacing:2px!important}
+.cleanroom-approved-lobby .cleanroom-join-card{display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;z-index:25!important;width:min(100%,500px)!important;margin:0 auto!important;padding:30px 28px 26px!important;border:1px solid #c9a45c!important;border-radius:14px!important;background:rgba(255,253,245,.97)!important;box-shadow:0 16px 40px rgba(41,70,53,.18)!important}
+.cleanroom-approved-lobby .cleanroom-join-card h2,.cleanroom-approved-lobby .cleanroom-join-card form,.cleanroom-approved-lobby .cleanroom-join-card label,.cleanroom-approved-lobby .cleanroom-note,.cleanroom-approved-lobby .cleanroom-hint,.cleanroom-approved-lobby .cleanroom-join-card button{visibility:visible!important;opacity:1!important}
+.cleanroom-approved-lobby .cleanroom-join-card h2{display:block!important;margin:0 0 24px!important;text-align:center!important;color:#174b37!important;font-size:34px!important;letter-spacing:7px!important}
+.cleanroom-approved-lobby .cleanroom-join-card h2::after{content:'ENTER ROOM'!important;display:block!important;margin-top:8px!important;color:#a87938!important;font:600 11px Georgia,serif!important;letter-spacing:3px!important}
+.cleanroom-approved-lobby .cleanroom-join-card label{display:block!important;margin:14px 0 7px!important;color:#174b37!important;font-size:17px!important;font-weight:700!important}
+.cleanroom-approved-lobby .cleanroom-join-card input,.cleanroom-approved-lobby .cleanroom-join-card select{display:block!important;visibility:visible!important;opacity:1!important;width:100%!important;min-height:52px!important;padding:0 16px!important;border:1px solid #bfc2b5!important;border-radius:8px!important;background:#fffef9!important;color:#173f30!important;font-size:18px!important;box-sizing:border-box!important}
+.cleanroom-approved-lobby .cleanroom-note{display:block!important;margin:7px 0 4px!important;color:#6d746d!important;font-size:13px!important;line-height:1.5!important}
+.cleanroom-approved-lobby .cleanroom-join-card button{display:flex!important;width:100%!important;min-height:68px!important;margin-top:20px!important;border:1px solid #d0a74f!important;border-radius:8px!important;background:linear-gradient(180deg,#287b52,#155d3e)!important;color:#fff8df!important;align-items:center!important;justify-content:center!important;flex-direction:column!important;font-weight:800!important;font-size:24px!important;box-shadow:0 5px 12px rgba(26,78,52,.22)!important}
+.cleanroom-approved-lobby .cleanroom-join-card button small{display:block!important;color:#f5e7c2!important;font:600 12px Georgia,serif!important;letter-spacing:2px!important}
+.cleanroom-approved-lobby .cleanroom-hint{display:block!important;margin:16px 8px 0!important;text-align:center!important;color:#676f69!important;font-size:12px!important;line-height:1.65!important}
+@media(max-width:600px){.cleanroom-join-shell.cleanroom-approved-lobby{padding:10px 10px 44px!important}.cleanroom-approved-lobby .cleanroom-brand{min-height:365px!important;margin-bottom:18px!important}.cleanroom-approved-lobby .cleanroom-emblem{width:230px!important;height:180px!important}.cleanroom-approved-lobby .cleanroom-game-title{font-size:39px!important;letter-spacing:5px!important;text-indent:5px!important}.cleanroom-approved-lobby .cleanroom-game-title-en{font-size:16px!important;letter-spacing:3px!important}.cleanroom-approved-lobby .cleanroom-game-tagline{font-size:13px!important;letter-spacing:1px!important}.cleanroom-approved-lobby .cleanroom-join-card{width:calc(100% - 10px)!important;padding:27px 20px 24px!important}.cleanroom-approved-lobby .cleanroom-join-card h2{font-size:29px!important;letter-spacing:5px!important}.cleanroom-approved-lobby .cleanroom-join-card input,.cleanroom-approved-lobby .cleanroom-join-card select{min-height:50px!important}}
