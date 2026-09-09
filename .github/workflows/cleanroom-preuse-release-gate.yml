@@ -29,6 +29,29 @@ jobs:
           echo "::notice::The old immutable manual URL $STALE_MANUAL_URL is forbidden for release/use after newer commits."
           echo "::notice::A manual immutable Vercel URL may be released only after its Vercel githubCommitSha is verified equal to this exact GITHUB_SHA."
 
+      - name: Mandatory lobby hero no-overlap contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          ENTRY=frontend/src/CleanroomEntry.tsx
+          CSS=frontend/src/cleanroom-lobby-polish.css
+          test -f "$ENTRY"
+          test -f "$CSS"
+          grep -F 'import "./cleanroom-lobby-polish.css";' "$ENTRY"
+          grep -F '<div className="cleanroom-emblem-title">掼蛋</div>' "$ENTRY"
+          grep -F '<h1 className="cleanroom-game-title">掼蛋游戏</h1>' "$ENTRY"
+          grep -F '.cleanroom-brand {' "$CSS"
+          grep -F 'flex-direction: column;' "$CSS"
+          grep -F '.cleanroom-emblem {' "$CSS"
+          grep -F 'margin: 0 auto 12px;' "$CSS"
+          grep -F '.cleanroom-game-title {' "$CSS"
+          grep -F 'margin: 0 !important;' "$CSS"
+          if grep -E '\.cleanroom-game-title[^}]*margin[^;]*-' "$CSS"; then
+            echo "::error::Lobby title may not use a negative margin that can overlap the emblem."
+            exit 1
+          fi
+          echo "::notice::Lobby QA requires the 掼蛋 emblem and 掼蛋游戏 heading to remain separate, stacked blocks with positive spacing."
+
       - name: Mandatory fixed-room source contract and deployment isolation
         shell: bash
         run: |
@@ -58,14 +81,10 @@ jobs:
           test -f "$HEADER"
           test -f "$CSS"
           test -f "$TABLE"
-
           grep -F 'const room = query.get("cleanroomRoom") ?? query.get("room") ?? "";' "$HEADER"
           grep -F 'return /^000[1-4]$/.test(room) ? room : "";' "$HEADER"
           grep -F 'className="guandan-header-visible-room"' "$HEADER"
           grep -F '房间：{visibleRoom}' "$HEADER"
-
-          # The legacy server-provided room node may contain cr-<commit>-000N, but it must
-          # be forcibly hidden with a high-specificity rule so it can never appear beside 掼蛋.
           grep -F '#root .guandan-table > .guandan-status-bar > div:nth-child(3),' "$CSS"
           grep -F '#root .guandan-table > .guandan-status-bar > div:nth-of-type(2) {' "$CSS"
           grep -F 'display: none !important;' "$CSS"
@@ -73,7 +92,6 @@ jobs:
           grep -F 'opacity: 0 !important;' "$CSS"
           grep -F '.guandan-header-visible-room {' "$CSS"
           grep -F '{state.room !== null && <div>房间：{state.room}</div>}' "$TABLE"
-
           public_label_count=$(grep -F -c '房间：{visibleRoom}' "$HEADER")
           if [ "$public_label_count" -ne 1 ]; then
             echo "::error::Exactly one public room label renderer is required; found $public_label_count."
