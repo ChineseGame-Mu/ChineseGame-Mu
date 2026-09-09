@@ -10,6 +10,7 @@ import GuandanCustomSortControls from "./GuandanCustomSortControls";
 import GuandanRoundResultHud from "./GuandanRoundResultHud";
 import GuandanHookToBottomSetting from "./GuandanHookToBottomSetting";
 import ExitGameButton from "./ExitGameButton";
+import cleanroomLobbyFinalImage from "./cleanroom-lobby-final-image";
 import "./cleanroom-hand-stack-fix.css";
 import "./cleanroom-initial-draw-position.css";
 import "./cleanroom-lobby-artwork.css";
@@ -33,22 +34,6 @@ const roomFromLocation = (): SelectableRoom => {
   return isSelectableRoom(fromQuery) ? fromQuery : defaultCleanroomRoom;
 };
 
-const GuandanJoinBrand = (): JSX.Element => (
-  <header className="cleanroom-brand cleanroom-brand-approved" aria-label="掼蛋游戏 Guandan Game">
-    <div className="cleanroom-emblem" aria-hidden="true">
-      <div className="cleanroom-emblem-cloud cleanroom-emblem-cloud-left" />
-      <div className="cleanroom-emblem-cloud cleanroom-emblem-cloud-right" />
-      <div className="cleanroom-card-fan">
-        <span className="cleanroom-fan-card cleanroom-fan-card-10">10♦</span><span className="cleanroom-fan-card cleanroom-fan-card-j">J♣</span><span className="cleanroom-fan-card cleanroom-fan-card-q">Q♥</span><span className="cleanroom-fan-card cleanroom-fan-card-k">K♠</span>
-      </div>
-      <div className="cleanroom-emblem-title">掼蛋</div>
-    </div>
-    <h1 className="cleanroom-game-title">掼蛋游戏</h1>
-    <div className="cleanroom-game-title-en">GUANDAN GAME</div>
-    <p className="cleanroom-game-tagline">经典掼蛋 · 智慧对决 · 乐在其中</p>
-  </header>
-);
-
 const PublicPlayerCountMarker = (): null => {
   const { state } = React.useContext(GuandanStateContext);
   const queryCount = Number(new URLSearchParams(window.location.search).get("players") ?? "4");
@@ -67,22 +52,49 @@ const CleanroomTable = (): JSX.Element => {
 };
 
 const CleanroomEntry = (): JSX.Element => {
-  const initial = React.useMemo(() => new URLSearchParams(window.location.search), []); const initialRoom = React.useMemo(roomFromLocation, []);
+  const initial = React.useMemo(() => new URLSearchParams(window.location.search), []);
+  const initialRoom = React.useMemo(roomFromLocation, []);
   const requested = Number(initial.get("playerCount") ?? initial.get("players") ?? "4");
   const initialCount = supportedCounts.includes(requested as (typeof supportedCounts)[number]) ? requested : 4;
-  const [roomId, setRoomId] = React.useState<SelectableRoom>(initialRoom); const [playerCount, setPlayerCount] = React.useState<number>(initialCount); const [name, setName] = React.useState(initial.get("playerName") ?? ""); const [joined, setJoined] = React.useState(false);
+  const [roomId, setRoomId] = React.useState<SelectableRoom>(initialRoom);
+  const [playerCount, setPlayerCount] = React.useState<number>(initialCount);
+  const [name, setName] = React.useState(initial.get("playerName") ?? "");
+  const [joined, setJoined] = React.useState(false);
   React.useEffect(() => { document.documentElement.dataset.cleanroomCommit = cleanroomBuildCommit; return () => { delete document.documentElement.dataset.cleanroomCommit; }; }, []);
   if (joined) return <CleanroomTable />;
-  const submit = (event: React.FormEvent): void => { event.preventDefault(); const cleanName = name.trim(); if (cleanName === "") return; const url = new URL(window.location.href); url.searchParams.set("cleanroom","1"); url.searchParams.set("game","guandan"); url.searchParams.set("cleanroomRoom",roomId); url.searchParams.set("room",roomId); url.searchParams.set("name",cleanName); url.searchParams.set("players",String(playerCount)); url.searchParams.set("test","1"); url.searchParams.set("ws",cleanroomWebsocket); url.searchParams.delete("playerName"); url.searchParams.delete("playerCount"); window.history.replaceState({},"",url.toString()); setJoined(true); };
+
+  const submit = (event: React.FormEvent): void => {
+    event.preventDefault();
+    const cleanName = name.trim();
+    if (cleanName === "") return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("cleanroom","1");
+    url.searchParams.set("game","guandan");
+    url.searchParams.set("cleanroomRoom",roomId);
+    url.searchParams.set("room",roomId);
+    url.searchParams.set("name",cleanName);
+    url.searchParams.set("players",String(playerCount));
+    url.searchParams.set("test","1");
+    url.searchParams.set("ws",cleanroomWebsocket);
+    url.searchParams.delete("playerName");
+    url.searchParams.delete("playerCount");
+    window.history.replaceState({},"",url.toString());
+    setJoined(true);
+  };
+
   return (
-    <main className="cleanroom-join-shell cleanroom-approved-lobby">
-      <div className="cleanroom-border-ornament cleanroom-border-ornament-tl" aria-hidden="true" /><div className="cleanroom-border-ornament cleanroom-border-ornament-tr" aria-hidden="true" />
-      <div className="cleanroom-bamboo" aria-hidden="true" /><div className="cleanroom-plum" aria-hidden="true" /><div className="cleanroom-lantern" aria-hidden="true">福</div>
-      <div className="cleanroom-clouds cleanroom-clouds-left" aria-hidden="true" /><div className="cleanroom-clouds cleanroom-clouds-right" aria-hidden="true" />
-      <div className="cleanroom-birds" aria-hidden="true">⌁　⌁</div><div className="cleanroom-bridge" aria-hidden="true" /><div className="cleanroom-pavilion" aria-hidden="true"><span>亭</span></div>
-      <div className="cleanroom-mountains cleanroom-mountains-left" aria-hidden="true" /><div className="cleanroom-mountains cleanroom-mountains-right" aria-hidden="true" /><div className="cleanroom-waves" aria-hidden="true" />
-      <div className="cleanroom-join-content"><GuandanJoinBrand /><section className="cleanroom-join-card"><div className="cleanroom-card-corner cleanroom-card-corner-tl" /><div className="cleanroom-card-corner cleanroom-card-corner-tr" /><div className="cleanroom-card-corner cleanroom-card-corner-bl" /><div className="cleanroom-card-corner cleanroom-card-corner-br" /><h2>加入牌室</h2><form onSubmit={submit}><label htmlFor="cleanroom-room">牌室</label><select id="cleanroom-room" value={roomId} onChange={(event) => setRoomId(event.target.value as SelectableRoom)}>{selectableRooms.map((room) => <option key={room} value={room}>{room}</option>)}</select><label htmlFor="cleanroom-player-count">开始人数：4–14 人</label><select id="cleanroom-player-count" value={playerCount} onChange={(event) => setPlayerCount(Number(event.target.value))}>{supportedCounts.map((count) => <option key={count} value={count}>{count} 人</option>)}</select><p className="cleanroom-note">第一位进入的玩家确定开始人数；之后可继续增加到 14 人。</p><label htmlFor="cleanroom-player-name">您的姓名</label><input id="cleanroom-player-name" value={name} maxLength={10} placeholder="请输入姓名" autoFocus onChange={(event) => setName(event.target.value)} /><button type="submit" disabled={name.trim() === ""}><span>进入牌室</span><small>ENTER ROOM</small></button></form><p className="cleanroom-hint">最多四个牌室：0001、0002、0003、0004。固定公开链接可在任何时间打开；系统会自动使用当前可加入的牌室会话。人数按 6→8→10→12→14 逐步增加，当前一局不中断，新玩家从满足偶数人数后的下一局开始参赛。</p></section></div>
+    <main className="cleanroom-final-shell">
+      <div className="cleanroom-final-stage">
+        <img className="cleanroom-final-art" src={cleanroomLobbyFinalImage} alt="掼蛋游戏山水牌室" />
+        <form className="cleanroom-final-form" onSubmit={submit} aria-label="加入牌室">
+          <select className="cleanroom-final-control cleanroom-final-room" aria-label="牌室" value={roomId} onChange={(event) => setRoomId(event.target.value as SelectableRoom)}>{selectableRooms.map((room) => <option key={room} value={room}>{room}</option>)}</select>
+          <select className="cleanroom-final-control cleanroom-final-players" aria-label="开始人数" value={playerCount} onChange={(event) => setPlayerCount(Number(event.target.value))}>{supportedCounts.map((count) => <option key={count} value={count}>{count} 人</option>)}</select>
+          <input className="cleanroom-final-control cleanroom-final-name" aria-label="您的姓名" value={name} maxLength={10} placeholder="请输入姓名" autoFocus onChange={(event) => setName(event.target.value)} />
+          <button className="cleanroom-final-enter" type="submit" disabled={name.trim() === ""} aria-label="进入牌室"><span>进入牌室</span><small>ENTER ROOM</small></button>
+        </form>
+      </div>
     </main>
   );
 };
+
 export default CleanroomEntry;
