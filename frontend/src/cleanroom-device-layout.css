@@ -65,17 +65,13 @@ html[data-guandan-player-count="14"] .guandan-public-player-back:nth-child(n + 1
   display: none !important;
 }
 
-/* Keep room number visible immediately to the left of Settings.
- * Header DOM order is: title, connection status, room, settings button.
- */
-.guandan-status-bar {
-  position: relative !important;
-}
-.guandan-status-bar > div:nth-of-type(2) {
-  position: absolute !important;
+/* The server room remains commit-scoped internally, but users only see 0001-0004. */
+.guandan-status-bar { position: relative !important; }
+.guandan-status-bar > div:nth-of-type(2) { display: none !important; }
+.guandan-header-visible-room {
+  position: fixed !important;
   top: 9px !important;
   right: 274px !important;
-  left: auto !important;
   z-index: 1301 !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -157,7 +153,7 @@ html[data-guandan-player-count="14"] .guandan-public-player-back:nth-child(n + 1
     padding-right: 12px !important;
   }
   .guandan-status-bar > button.normal { right: 164px !important; }
-  .guandan-status-bar > div:nth-of-type(2) { right: 258px !important; }
+  .guandan-header-visible-room { right: 258px !important; }
 }
 
 @media (min-width: 641px) and (max-width: 900px) {
@@ -191,7 +187,7 @@ html[data-guandan-player-count="14"] .guandan-public-player-back:nth-child(n + 1
   .guandan-private-zone > section.guandan-play-actions > button:last-child { right: 7px !important; }
   .guandan-public-player-backs { max-width: 64% !important; }
   .guandan-status-bar > button.normal { right: 150px !important; min-width: 84px !important; }
-  .guandan-status-bar > div:nth-of-type(2) {
+  .guandan-header-visible-room {
     right: 244px !important;
     min-width: 104px !important;
     font-size: 13px !important;
@@ -239,7 +235,7 @@ html[data-guandan-player-count="14"] .guandan-public-player-back:nth-child(n + 1
     padding: 0 9px !important;
     font-size: 13px !important;
   }
-  .guandan-status-bar > div:nth-of-type(2) {
+  .guandan-header-visible-room {
     top: 7px !important;
     right: 202px !important;
     min-width: 88px !important;
