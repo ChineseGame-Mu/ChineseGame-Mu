@@ -4,11 +4,6 @@ on:
   push:
     branches:
       - cleanroom/yihua-game-20260826
-    paths:
-      - ".github/workflows/cleanroom-yihua-game-expert-multiplayer-4to14.yml"
-      - "yihua-game/scripts/**"
-      - "yihua-game/src/core/**"
-      - "yihua-game/test/**"
   workflow_dispatch:
 
 jobs:
