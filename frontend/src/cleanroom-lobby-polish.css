@@ -1,270 +1,111 @@
-/* Lobby v3 — rebuilt to match the approved shanshui reference. */
+/* Lobby v4 — rich watercolor shanshui treatment matching the approved reference. */
 .cleanroom-join-shell.cleanroom-approved-lobby {
   position: relative;
   min-height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
-  padding: 22px 18px 54px;
+  padding: 24px 18px 64px !important;
   color: #173f2d;
+  isolation: isolate;
   background:
-    radial-gradient(ellipse at 50% 60%, rgba(255,255,247,.9) 0 18%, transparent 50%),
-    radial-gradient(ellipse at 15% 70%, rgba(80,119,91,.10) 0 24%, transparent 48%),
-    radial-gradient(ellipse at 85% 76%, rgba(67,103,81,.10) 0 22%, transparent 45%),
-    linear-gradient(180deg,#fbf7e9 0%,#f4f2df 28%,#e7eee1 62%,#d8e5d9 100%) !important;
+    radial-gradient(circle at 12% 18%, rgba(255,255,255,.92) 0 7%, transparent 25%),
+    radial-gradient(circle at 82% 23%, rgba(255,247,229,.78) 0 8%, transparent 28%),
+    linear-gradient(180deg,#fbf4df 0%,#f7f1df 27%,#edf1df 58%,#dbe9dc 100%) !important;
 }
-
 .cleanroom-approved-lobby::before {
-  content: "";
-  position: absolute;
-  inset: 10px;
-  z-index: 0;
-  border: 1px solid rgba(184,148,75,.45);
-  box-shadow: inset 0 0 0 3px rgba(255,250,226,.5);
-  pointer-events: none;
+  content:""; position:absolute; inset:10px; z-index:0; pointer-events:none;
+  border:1px solid rgba(183,143,61,.60); box-shadow:inset 0 0 0 3px rgba(255,249,224,.55);
 }
-
 .cleanroom-approved-lobby::after {
-  content: "";
-  position: absolute;
-  left: -8%; right: -8%; bottom: -1%;
-  height: 260px;
-  z-index: 0;
-  opacity: .36;
+  content:""; position:absolute; left:-12%; right:-12%; bottom:-8px; height:320px; z-index:0; pointer-events:none; opacity:.64;
   background:
-    linear-gradient(152deg, transparent 0 40%, rgba(60,99,77,.25) 41% 47%, transparent 48%) 0 30px/230px 190px repeat-x,
-    linear-gradient(28deg, transparent 0 44%, rgba(81,114,91,.22) 45% 51%, transparent 52%) 80px 50px/260px 180px repeat-x,
-    repeating-radial-gradient(ellipse at 50% 100%, transparent 0 23px, rgba(64,112,96,.23) 24px 26px, transparent 27px 43px);
-  pointer-events: none;
+    radial-gradient(ellipse at 22% 100%, transparent 0 32%, rgba(39,106,91,.22) 33% 36%, transparent 37% 46%, rgba(39,106,91,.18) 47% 50%, transparent 51%),
+    radial-gradient(ellipse at 55% 105%, transparent 0 35%, rgba(58,126,107,.21) 36% 39%, transparent 40% 49%, rgba(58,126,107,.16) 50% 53%, transparent 54%),
+    radial-gradient(ellipse at 85% 100%, transparent 0 29%, rgba(30,92,79,.20) 30% 33%, transparent 34% 43%, rgba(30,92,79,.15) 44% 47%, transparent 48%);
 }
+.cleanroom-approved-lobby .cleanroom-join-content { position:relative; z-index:8; width:min(100%,610px)!important; margin:0 auto; padding-top:0!important; }
+.cleanroom-approved-lobby .cleanroom-brand { display:flex!important; flex-direction:column; align-items:center; width:100%; margin:6px auto 30px!important; }
 
-.cleanroom-approved-lobby .cleanroom-join-content {
-  position: relative;
-  z-index: 4;
-  width: min(100%, 620px) !important;
-  margin: 0 auto;
-  padding-top: 0 !important;
+/* ornate red/gold emblem */
+.cleanroom-approved-lobby .cleanroom-emblem { position:relative; width:260px!important; height:196px!important; margin:0 auto 24px!important; filter:drop-shadow(0 12px 12px rgba(92,41,24,.19)); }
+.cleanroom-approved-lobby .cleanroom-emblem::before { content:""; position:absolute; left:50%; top:58px; width:220px; height:116px; transform:translateX(-50%); border:5px solid #d4a342; border-radius:48% 48% 42% 42%/52% 52% 40% 40%; background:linear-gradient(180deg,#c23224,#9f2118 58%,#7e1712); box-shadow:inset 0 0 0 3px #751511,0 7px 0 #7b2518; }
+.cleanroom-approved-lobby .cleanroom-emblem::after { content:"掼"; position:absolute; left:50%; bottom:-9px; z-index:10; width:43px; height:43px; transform:translateX(-50%); display:grid; place-items:center; border:3px solid #e1b04c; border-radius:50%; background:#9b2118; color:#f6d276; font-weight:900; font-size:19px; box-shadow:0 3px 0 #6f170f; }
+.cleanroom-approved-lobby .cleanroom-emblem-cloud { position:absolute; top:83px; width:44px; height:26px; border:4px solid #d7aa4d; border-color:#d7aa4d transparent transparent #d7aa4d; border-radius:50%; opacity:.95; }
+.cleanroom-approved-lobby .cleanroom-emblem-cloud-left { left:2px; transform:rotate(-18deg); }
+.cleanroom-approved-lobby .cleanroom-emblem-cloud-right { right:2px; transform:scaleX(-1) rotate(-18deg); }
+.cleanroom-approved-lobby .cleanroom-emblem-title { top:87px!important; z-index:7!important; width:202px!important; border:0!important; background:transparent!important; box-shadow:none!important; color:#f4d278!important; font-size:48px!important; letter-spacing:5px!important; text-shadow:0 2px 0 #7b1a12,0 0 8px rgba(255,233,162,.2)!important; }
+.cleanroom-approved-lobby .cleanroom-card-fan { top:0!important; z-index:6!important; }
+.cleanroom-approved-lobby .cleanroom-fan-card { width:52px!important; height:75px!important; border:2px solid #d5aa4c!important; border-radius:9px!important; background:linear-gradient(150deg,#fffef6,#f3dfaa)!important; box-shadow:0 3px 8px rgba(70,49,20,.16)!important; font-size:17px!important; }
+
+.cleanroom-approved-lobby .cleanroom-game-title { margin:0!important; color:#204a35!important; font-size:clamp(42px,7vw,56px)!important; font-weight:800!important; letter-spacing:9px!important; text-indent:9px; line-height:1.08!important; }
+.cleanroom-approved-lobby .cleanroom-game-title-en { margin-top:11px!important; color:#9b6731!important; font-size:18px!important; letter-spacing:3.8px!important; font-family:Georgia,serif; }
+.cleanroom-approved-lobby .cleanroom-game-title-en::before,.cleanroom-approved-lobby .cleanroom-game-title-en::after { width:70px!important; height:1px!important; background:linear-gradient(90deg,transparent,#b68a44,transparent)!important; }
+.cleanroom-approved-lobby .cleanroom-game-tagline { margin:9px 0 0!important; color:#667167!important; font-size:14px!important; letter-spacing:2px!important; }
+
+/* scenery */
+.cleanroom-approved-lobby .cleanroom-bamboo { display:block!important; position:absolute!important; z-index:2!important; top:0!important; left:-24px!important; width:210px!important; height:520px!important; opacity:.48!important; background:
+  linear-gradient(83deg,transparent 47%,#587a58 48% 50%,transparent 51%) 12px 0/72px 100%,
+  linear-gradient(87deg,transparent 48%,#6a8863 49% 51%,transparent 52%) 76px 12px/74px 100%,
+  radial-gradient(ellipse at 76% 52%,#54785c 0 24%,transparent 26%) 0 10px/86px 58px,
+  radial-gradient(ellipse at 20% 48%,#6e8c6b 0 23%,transparent 25%) 30px 52px/90px 58px!important; transform:rotate(-5deg)!important; }
+.cleanroom-approved-lobby .cleanroom-plum { display:block!important; position:absolute!important; z-index:2!important; top:8px!important; right:-20px!important; width:270px!important; height:310px!important; opacity:.77!important; background:
+  radial-gradient(circle,#a13a31 0 10%,#e99d85 11% 25%,transparent 27%) 32px 10px/50px 50px,
+  radial-gradient(circle,#ad4034 0 10%,#efad92 11% 25%,transparent 27%) 94px 46px/54px 54px,
+  radial-gradient(circle,#a13a31 0 10%,#e99d85 11% 25%,transparent 27%) 153px 12px/50px 50px,
+  radial-gradient(circle,#b24538 0 10%,#efb198 11% 25%,transparent 27%) 118px 105px/48px 48px,
+  linear-gradient(142deg,transparent 48%,#624638 49% 51%,transparent 52%)!important; }
+.cleanroom-approved-lobby .cleanroom-lantern { display:grid!important; place-items:center; position:absolute!important; z-index:3!important; top:170px!important; right:7%!important; width:58px!important; height:74px!important; border:2px solid #b95a42!important; border-radius:45% 45% 43% 43%!important; background:radial-gradient(circle at 50% 35%,#ec9d7f 0 12%,#d66f57 60%,#b84b3f 100%)!important; color:#7d1b15!important; font-weight:800!important; font-size:24px!important; box-shadow:inset 9px 0 12px rgba(122,31,21,.12),inset -9px 0 12px rgba(122,31,21,.12)!important; opacity:.86!important; }
+.cleanroom-approved-lobby .cleanroom-lantern::before { content:""; position:absolute; top:-14px; width:2px; height:14px; background:#956642; }
+.cleanroom-approved-lobby .cleanroom-lantern::after { content:""; position:absolute; bottom:-24px; width:2px; height:24px; background:#a85b42; box-shadow:-8px 0 0 #a85b42,8px 0 0 #a85b42; }
+.cleanroom-approved-lobby .cleanroom-clouds { position:absolute; z-index:1; width:180px; height:70px; opacity:.2; background:radial-gradient(ellipse at 20% 70%,#9ab3a0 0 24%,transparent 26%),radial-gradient(ellipse at 50% 58%,#9ab3a0 0 29%,transparent 31%),radial-gradient(ellipse at 80% 70%,#9ab3a0 0 22%,transparent 24%); }
+.cleanroom-approved-lobby .cleanroom-clouds-left { left:6%; top:420px; }
+.cleanroom-approved-lobby .cleanroom-clouds-right { right:4%; top:510px; transform:scale(.8); }
+.cleanroom-approved-lobby .cleanroom-birds { position:absolute; z-index:2; top:390px; right:25%; color:#405b4d; font-size:24px; letter-spacing:8px; opacity:.45; transform:rotate(-8deg); }
+.cleanroom-approved-lobby .cleanroom-bridge { position:absolute; z-index:2; left:4%; top:560px; width:150px; height:64px; border-top:7px solid rgba(102,87,58,.55); border-radius:50% 50% 0 0; transform:rotate(-4deg); opacity:.72; }
+.cleanroom-approved-lobby .cleanroom-bridge::before,.cleanroom-approved-lobby .cleanroom-bridge::after { content:""; position:absolute; top:13px; width:5px; height:48px; background:rgba(102,87,58,.5); }
+.cleanroom-approved-lobby .cleanroom-bridge::before { left:27px; }.cleanroom-approved-lobby .cleanroom-bridge::after { right:27px; }
+.cleanroom-approved-lobby .cleanroom-pavilion { position:absolute; z-index:2; right:4%; top:505px; width:96px; height:70px; opacity:.58; }
+.cleanroom-approved-lobby .cleanroom-pavilion::before { content:""; position:absolute; left:6px; top:8px; width:84px; height:18px; background:#486a55; clip-path:polygon(0 100%,20% 18%,50% 0,80% 18%,100% 100%,76% 67%,24% 67%); }
+.cleanroom-approved-lobby .cleanroom-pavilion::after { content:""; position:absolute; left:22px; top:26px; width:52px; height:38px; border-left:4px solid #57705a; border-right:4px solid #57705a; border-bottom:5px solid #57705a; }
+.cleanroom-approved-lobby .cleanroom-pavilion span { display:none; }
+.cleanroom-approved-lobby .cleanroom-mountains { display:block!important; position:absolute!important; z-index:1!important; bottom:9%!important; height:44%!important; width:56%!important; opacity:.20!important; filter:blur(.2px); }
+.cleanroom-approved-lobby .cleanroom-mountains-left { left:-8%!important; }.cleanroom-approved-lobby .cleanroom-mountains-right { right:-8%!important; }
+.cleanroom-approved-lobby .cleanroom-waves { display:block!important; position:absolute!important; z-index:1!important; left:0!important; right:0!important; bottom:0!important; height:210px!important; opacity:.30!important; }
+.cleanroom-approved-lobby .cleanroom-border-ornament { position:absolute; z-index:3; top:15px; width:42px; height:42px; border-top:2px solid #b68b43; }
+.cleanroom-approved-lobby .cleanroom-border-ornament-tl { left:15px; border-left:2px solid #b68b43; }.cleanroom-approved-lobby .cleanroom-border-ornament-tr { right:15px; border-right:2px solid #b68b43; }
+
+/* Join card */
+.cleanroom-approved-lobby .cleanroom-join-card { position:relative; width:min(100%,480px)!important; margin:22px auto 0!important; padding:31px 26px 28px!important; border:1px solid rgba(184,145,66,.58)!important; border-radius:14px!important; background:rgba(255,253,243,.955)!important; box-shadow:0 22px 48px rgba(36,74,54,.14),inset 0 0 32px rgba(219,186,109,.09)!important; backdrop-filter:blur(7px); }
+.cleanroom-approved-lobby .cleanroom-join-card h2 { margin:0 0 20px!important; color:#24533a!important; font-size:30px!important; letter-spacing:6px!important; }
+.cleanroom-approved-lobby .cleanroom-join-card h2::after { content:"ENTER ROOM"!important; display:block!important; margin-top:7px!important; color:#b58b48!important; font-size:10px!important; font-family:Georgia,serif!important; font-weight:600!important; letter-spacing:3px!important; }
+.cleanroom-approved-lobby .cleanroom-join-card label { margin-top:15px!important; color:#285039!important; font-size:15px!important; }
+.cleanroom-approved-lobby .cleanroom-join-card input,.cleanroom-approved-lobby .cleanroom-join-card select { min-height:49px!important; border:1px solid #c6c4ad!important; border-radius:9px!important; background:#fffef8!important; font-size:17px!important; }
+.cleanroom-approved-lobby .cleanroom-note { color:#73776e!important; font-size:12px!important; line-height:1.55!important; }
+.cleanroom-approved-lobby .cleanroom-join-card button { min-height:66px!important; margin-top:21px!important; border:1px solid #caa158!important; border-radius:9px!important; background:linear-gradient(180deg,#3d8059,#236947)!important; box-shadow:inset 0 0 0 2px rgba(248,219,145,.14),0 5px 12px rgba(40,83,58,.17)!important; }
+.cleanroom-approved-lobby .cleanroom-hint { margin-top:17px!important; color:#74786f!important; font-size:12px!important; line-height:1.7!important; }
+
+@media (max-width:600px) {
+  .cleanroom-join-shell.cleanroom-approved-lobby { padding:12px 10px 44px!important; }
+  .cleanroom-approved-lobby .cleanroom-brand { margin:2px auto 20px!important; }
+  .cleanroom-approved-lobby .cleanroom-emblem { width:224px!important; height:174px!important; margin-bottom:24px!important; }
+  .cleanroom-approved-lobby .cleanroom-emblem::before { width:196px; height:102px; top:55px; }
+  .cleanroom-approved-lobby .cleanroom-emblem-title { top:82px!important; width:184px!important; font-size:42px!important; }
+  .cleanroom-approved-lobby .cleanroom-card-fan { transform:translateX(-50%) scale(.91); transform-origin:center bottom; }
+  .cleanroom-approved-lobby .cleanroom-game-title { font-size:38px!important; letter-spacing:7px!important; text-indent:7px!important; }
+  .cleanroom-approved-lobby .cleanroom-game-title-en { font-size:15px!important; letter-spacing:2.7px!important; }
+  .cleanroom-approved-lobby .cleanroom-game-title-en::before,.cleanroom-approved-lobby .cleanroom-game-title-en::after { width:38px!important; }
+  .cleanroom-approved-lobby .cleanroom-game-tagline { font-size:11px!important; letter-spacing:1px!important; }
+  .cleanroom-approved-lobby .cleanroom-join-card { width:calc(100% - 12px)!important; padding:27px 20px 24px!important; }
+  .cleanroom-approved-lobby .cleanroom-bamboo { left:-74px!important; width:170px!important; height:430px!important; opacity:.36!important; }
+  .cleanroom-approved-lobby .cleanroom-plum { right:-96px!important; width:220px!important; height:260px!important; opacity:.60!important; }
+  .cleanroom-approved-lobby .cleanroom-lantern { top:158px!important; right:4%!important; transform:scale(.82); }
+  .cleanroom-approved-lobby .cleanroom-bridge { top:525px; left:-16px; transform:scale(.72) rotate(-4deg); }
+  .cleanroom-approved-lobby .cleanroom-pavilion { top:470px; right:-20px; transform:scale(.72); }
+  .cleanroom-approved-lobby .cleanroom-birds { top:375px; right:18%; font-size:20px; }
+  .cleanroom-approved-lobby .cleanroom-clouds-left { top:390px; left:-10%; }.cleanroom-approved-lobby .cleanroom-clouds-right { top:460px; right:-8%; }
 }
-
-.cleanroom-approved-lobby .cleanroom-brand {
-  display: flex !important;
-  width: 100%;
-  margin: 2px auto 28px !important;
-  flex-direction: column;
-  align-items: center;
-}
-
-.cleanroom-approved-lobby .cleanroom-emblem {
-  position: relative;
-  width: 238px !important;
-  height: 184px !important;
-  margin: 0 auto 24px !important;
-  flex: none;
-  filter: drop-shadow(0 10px 10px rgba(106,46,20,.18));
-}
-
-.cleanroom-approved-lobby .cleanroom-emblem::after {
-  content: "掼";
-  position: absolute;
-  left: 50%;
-  bottom: -10px;
-  z-index: 8;
-  display: grid;
-  width: 38px;
-  height: 38px;
-  place-items: center;
-  transform: translateX(-50%);
-  border: 3px solid #e2b24e;
-  border-radius: 50%;
-  background: #9d2119;
-  box-shadow: 0 2px 0 #6f160f, inset 0 0 0 2px rgba(255,229,151,.2);
-  color: #f5d06c;
-  font-size: 18px;
-  font-weight: 900;
-}
-
-.cleanroom-approved-lobby .cleanroom-emblem-title {
-  top: 75px !important;
-  width: 202px !important;
-  padding: 7px 0 11px !important;
-  border-color: #e1ad45 !important;
-  background: linear-gradient(180deg,#c33224 0%,#a31e18 55%,#821613 100%) !important;
-  box-shadow: inset 0 0 0 2px #74120f, 0 4px 0 #6c2118, 0 8px 16px rgba(100,35,20,.20) !important;
-  color: #f5d57b !important;
-  font-size: 48px !important;
-}
-
-.cleanroom-approved-lobby .cleanroom-card-fan { top: 0 !important; }
-.cleanroom-approved-lobby .cleanroom-fan-card {
-  width: 49px !important;
-  height: 70px !important;
-  background: linear-gradient(145deg,#fffef5,#f2dda2) !important;
-  border-color: #d7ae55 !important;
-}
-
-.cleanroom-approved-lobby .cleanroom-game-title {
-  position: relative;
-  z-index: 7;
-  margin: 0 !important;
-  padding: 0 !important;
-  color: #294f36 !important;
-  font-size: clamp(40px,7vw,53px) !important;
-  font-weight: 800 !important;
-  letter-spacing: 9px !important;
-  line-height: 1.1 !important;
-  text-indent: 9px;
-}
-
-.cleanroom-approved-lobby .cleanroom-game-title-en {
-  margin-top: 10px !important;
-  color: #9b6731 !important;
-  font-size: 18px !important;
-  letter-spacing: 2.5px !important;
-}
-
-.cleanroom-approved-lobby .cleanroom-game-title-en::before,
-.cleanroom-approved-lobby .cleanroom-game-title-en::after {
-  width: 62px !important;
-  background: linear-gradient(90deg,transparent,#b48e52,transparent) !important;
-}
-
-.cleanroom-approved-lobby .cleanroom-game-tagline {
-  margin: 9px 0 0 !important;
-  color: #6d756d !important;
-  font-size: 14px !important;
-  letter-spacing: 2px !important;
-}
-
-.cleanroom-approved-lobby .cleanroom-join-card {
-  position: relative;
-  width: min(100%, 500px) !important;
-  margin: 18px auto 0 !important;
-  padding: 30px 26px 26px !important;
-  border: 1px solid rgba(185,146,70,.48) !important;
-  border-radius: 15px !important;
-  background: rgba(255,254,246,.96) !important;
-  box-shadow: 0 20px 46px rgba(42,79,56,.13), inset 0 0 35px rgba(215,184,112,.07) !important;
-  backdrop-filter: blur(6px);
-}
-
-.cleanroom-approved-lobby .cleanroom-join-card h2 {
-  margin-bottom: 10px !important;
-  color: #28523a !important;
-  font-size: 29px !important;
-  letter-spacing: 5px !important;
-}
-.cleanroom-approved-lobby .cleanroom-join-card h2::before,
-.cleanroom-approved-lobby .cleanroom-join-card h2::after { color:#c49a45 !important; }
-
-.cleanroom-approved-lobby .cleanroom-join-card label {
-  margin-top: 14px !important;
-  color: #294f39 !important;
-  font-size: 15px !important;
-}
-
-.cleanroom-approved-lobby .cleanroom-join-card input,
-.cleanroom-approved-lobby .cleanroom-join-card select {
-  min-height: 48px !important;
-  border: 1px solid #c8c7b1 !important;
-  border-radius: 9px !important;
-  background: #fffef8 !important;
-  font-size: 17px !important;
-}
-
-.cleanroom-approved-lobby .cleanroom-note {
-  color: #74786f !important;
-  font-size: 12px !important;
-  line-height: 1.55 !important;
-}
-
-.cleanroom-approved-lobby .cleanroom-join-card button {
-  min-height: 64px !important;
-  margin-top: 20px !important;
-  border: 1px solid #cba35b !important;
-  border-radius: 9px !important;
-  background: linear-gradient(180deg,#3b825a 0%,#236a45 100%) !important;
-  box-shadow: inset 0 0 0 2px rgba(247,220,150,.13), 0 5px 12px rgba(43,91,61,.18) !important;
-}
-
-.cleanroom-approved-lobby .cleanroom-hint {
-  margin-top: 17px !important;
-  color: #77796e !important;
-  font-size: 12px !important;
-  line-height: 1.7 !important;
-}
-
-/* Watercolor bamboo on the left. */
-.cleanroom-approved-lobby .cleanroom-bamboo {
-  display: block !important;
-  top: -8px !important;
-  left: -14px !important;
-  width: 170px !important;
-  height: 420px !important;
-  opacity: .42 !important;
-  background:
-    linear-gradient(84deg,transparent 47%,#4a6f4d 48% 51%,transparent 52%) 18px 0/58px 100%,
-    linear-gradient(88deg,transparent 48%,#5b7b57 49% 51%,transparent 52%) 68px 20px/68px 100%,
-    radial-gradient(ellipse at 78% 55%,#54785a 0 21%,transparent 23%) 0 10px/72px 50px,
-    radial-gradient(ellipse at 20% 50%,#668565 0 20%,transparent 22%) 30px 42px/76px 52px !important;
-  transform: rotate(-5deg) !important;
-}
-
-/* Plum branch on the right. */
-.cleanroom-approved-lobby .cleanroom-plum {
-  display: block !important;
-  top: 18px !important;
-  right: -16px !important;
-  width: 220px !important;
-  height: 260px !important;
-  opacity: .72 !important;
-  background:
-    radial-gradient(circle,#a83f34 0 10%,#e9a78d 11% 23%,transparent 25%) 42px 12px/47px 47px,
-    radial-gradient(circle,#b44a3c 0 10%,#efb199 11% 23%,transparent 25%) 104px 38px/52px 52px,
-    radial-gradient(circle,#a63a31 0 10%,#eaa78f 11% 23%,transparent 25%) 150px 8px/49px 49px,
-    radial-gradient(circle,#b64b3e 0 10%,#efb199 11% 23%,transparent 25%) 78px 94px/43px 43px,
-    linear-gradient(143deg,transparent 48%,#654936 49% 51%,transparent 52%) !important;
-}
-
-.cleanroom-approved-lobby .cleanroom-lantern {
-  display: block !important;
-  top: 168px !important;
-  right: 10% !important;
-  opacity: .58 !important;
-}
-
-/* Misty mountains flank the join card. */
-.cleanroom-approved-lobby .cleanroom-mountains {
-  display: block !important;
-  bottom: 7% !important;
-  height: 38% !important;
-  opacity: .16 !important;
-}
-.cleanroom-approved-lobby .cleanroom-mountains-left { left:-5% !important; }
-.cleanroom-approved-lobby .cleanroom-mountains-right { right:-5% !important; }
-.cleanroom-approved-lobby .cleanroom-waves { display:block !important; opacity:.18 !important; }
-
-@media (max-width: 600px) {
-  .cleanroom-join-shell.cleanroom-approved-lobby { padding: 12px 10px 38px !important; }
-  .cleanroom-approved-lobby::before { inset: 7px; }
-  .cleanroom-approved-lobby .cleanroom-brand { margin-bottom: 20px !important; }
-  .cleanroom-approved-lobby .cleanroom-emblem { width: 216px !important; height: 171px !important; margin-bottom: 22px !important; transform: none !important; }
-  .cleanroom-approved-lobby .cleanroom-emblem-title { top: 68px !important; width: 190px !important; font-size: 45px !important; }
-  .cleanroom-approved-lobby .cleanroom-card-fan { transform: translateX(-50%) scale(.92); transform-origin:center bottom; }
-  .cleanroom-approved-lobby .cleanroom-game-title { font-size: 38px !important; letter-spacing: 7px !important; text-indent: 7px !important; }
-  .cleanroom-approved-lobby .cleanroom-game-title-en { margin-top: 8px !important; font-size: 15px !important; }
-  .cleanroom-approved-lobby .cleanroom-game-title-en::before,
-  .cleanroom-approved-lobby .cleanroom-game-title-en::after { width: 36px !important; }
-  .cleanroom-approved-lobby .cleanroom-game-tagline { margin-top: 7px !important; font-size: 11px !important; letter-spacing: 1px !important; }
-  .cleanroom-approved-lobby .cleanroom-join-card { width: calc(100% - 10px) !important; margin-top: 16px !important; padding: 25px 20px 23px !important; border-radius: 13px !important; }
-  .cleanroom-approved-lobby .cleanroom-join-card h2 { font-size: 25px !important; }
-  .cleanroom-approved-lobby .cleanroom-bamboo { left:-50px !important; width:145px !important; height:360px !important; opacity:.34 !important; }
-  .cleanroom-approved-lobby .cleanroom-plum { right:-72px !important; width:190px !important; height:220px !important; opacity:.55 !important; }
-  .cleanroom-approved-lobby .cleanroom-lantern { right:4% !important; top:150px !important; transform:scale(.82); }
-  .cleanroom-approved-lobby .cleanroom-mountains { opacity:.12 !important; }
-}
-
-@media (max-width: 390px) {
-  .cleanroom-approved-lobby .cleanroom-emblem { width: 204px !important; height: 164px !important; }
-  .cleanroom-approved-lobby .cleanroom-emblem-title { width: 180px !important; font-size: 42px !important; }
-  .cleanroom-approved-lobby .cleanroom-game-title { font-size: 35px !important; }
-  .cleanroom-approved-lobby .cleanroom-join-card { width: 100% !important; }
+@media (max-width:390px) {
+  .cleanroom-approved-lobby .cleanroom-emblem { width:210px!important; height:168px!important; }
+  .cleanroom-approved-lobby .cleanroom-game-title { font-size:35px!important; }
+  .cleanroom-approved-lobby .cleanroom-join-card { width:100%!important; }
 }
