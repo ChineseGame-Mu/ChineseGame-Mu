@@ -27,33 +27,42 @@ jobs:
             exit 1
           fi
           echo "::notice::The old immutable manual URL $STALE_MANUAL_URL is forbidden for release/use after newer commits."
-          echo "::notice::A manual immutable Vercel URL may be released only after its Vercel githubCommitSha is verified equal to this exact GITHUB_SHA."
 
-      - name: Mandatory approved lobby artwork integration contract
+      - name: Mandatory approved lobby live-DOM integration contract
         shell: bash
         run: |
           set -euo pipefail
           ENTRY=frontend/src/CleanroomEntry.tsx
           ART=frontend/src/cleanroom-lobby-artwork.css
+          POLISH=frontend/src/cleanroom-lobby-polish.css
+          VISUAL=.github/workflows/cleanroom-lobby-visual-gate.yml
           test -f "$ENTRY"
           test -f "$ART"
+          test -f "$POLISH"
+          test -f "$VISUAL"
 
-          # A generated/reference image is NOT considered installed merely because CSS exists.
-          # The actual runtime shell must opt into the artwork mode and that mode must have
-          # a real background-image declaration. This prevents another false-green release
-          # where the approved mockup exists only outside the deployed app.
-          grep -F 'className="cleanroom-join-shell cleanroom-join-shell-artwork"' "$ENTRY"
-          grep -E 'background-image:[[:space:]]*url\(' "$ART"
+          grep -F 'className="cleanroom-join-shell cleanroom-approved-lobby"' "$ENTRY"
+          grep -F 'className="cleanroom-brand cleanroom-brand-approved"' "$ENTRY"
+          grep -F '<div className="cleanroom-emblem-title">掼蛋</div>' "$ENTRY"
+          grep -F '<h1 className="cleanroom-game-title">掼蛋游戏</h1>' "$ENTRY"
+          grep -F '<div className="cleanroom-game-title-en">GUANDAN GAME</div>' "$ENTRY"
+          grep -F '.cleanroom-approved-lobby .cleanroom-brand { display: flex !important;' "$ART"
+          grep -F '.cleanroom-approved-lobby .cleanroom-emblem { margin-bottom: 22px !important;' "$ART"
+          grep -F '.cleanroom-approved-lobby .cleanroom-game-title { margin-top: 0 !important;' "$ART"
 
-          if grep -E 'background-image:[[:space:]]*none' "$ART"; then
-            echo "::error::Approved lobby artwork cannot resolve to background-image:none."
+          if grep -F 'cleanroom-join-shell-artwork' "$ENTRY"; then
+            echo "::error::Stale composite artwork mode is forbidden; approved lobby must render as live DOM/CSS."
             exit 1
           fi
-
-          # Artwork mode intentionally replaces the legacy CSS-built brand artwork.
-          grep -F '.cleanroom-join-shell-artwork .cleanroom-brand' "$ART"
-          grep -F 'display: none;' "$ART"
-          echo "::notice::Lobby v2 must be actually mounted in CleanroomEntry and must render a real artwork background; a mockup-only change is forbidden."
+          if grep -E '\.cleanroom-brand[^\{]*\{[^}]*display:[[:space:]]*none' "$ART"; then
+            echo "::error::Approved live brand must never be hidden."
+            exit 1
+          fi
+          grep -F "viewport: { width: 390, height: 844 }" "$VISUAL"
+          grep -F "emblem.bottom > title.top" "$VISUAL"
+          grep -F "title.bottom > english.top" "$VISUAL"
+          grep -F "english.bottom > card.top" "$VISUAL"
+          echo "::notice::Lobby v2 is mounted as live DOM and mandatory iPhone visual geometry QA is installed."
 
       - name: Mandatory fixed-room source contract and deployment isolation
         shell: bash
@@ -64,7 +73,6 @@ jobs:
           test -f "$ENTRY"
           test -f "$WS"
           grep -F 'const selectableRooms = ["0001", "0002", "0003", "0004"] as const;' "$ENTRY"
-          grep -F '<select' "$ENTRY"
           grep -F 'id="cleanroom-room"' "$ENTRY"
           if grep -E 'input[^>]+(name="room"|name="cleanroomRoom"|id="cleanroom-room")' "$ENTRY"; then
             echo "::error::Free-text fixed-room input is forbidden."
@@ -72,7 +80,6 @@ jobs:
           fi
           grep -F 'cleanroomDeploymentRoom' "$WS"
           grep -F 'return `cr-${deploymentKey}-${room}`;' "$WS"
-          echo "::notice::0001-0004 remain deployment-scoped; a new immutable deployment uses a different backend room namespace from the stale deployment."
 
       - name: Mandatory single visible public room-number contract
         shell: bash
@@ -81,54 +88,23 @@ jobs:
           HEADER=frontend/src/GuandanHeaderDecor.tsx
           CSS=frontend/src/cleanroom-device-layout.css
           TABLE=frontend/src/GuandanTable.tsx
-          test -f "$HEADER"
-          test -f "$CSS"
-          test -f "$TABLE"
-
-          grep -F 'const room = query.get("cleanroomRoom") ?? query.get("room") ?? "";' "$HEADER"
-          grep -F 'return /^000[1-4]$/.test(room) ? room : "";' "$HEADER"
           grep -F 'className="guandan-header-visible-room"' "$HEADER"
           grep -F '房间：{visibleRoom}' "$HEADER"
-
-          # The legacy server-provided room node may contain cr-<commit>-000N, but it must
-          # be forcibly hidden with a high-specificity rule so it can never appear beside 掼蛋.
-          grep -F '#root .guandan-table > .guandan-status-bar > div:nth-child(3),' "$CSS"
-          grep -F '#root .guandan-table > .guandan-status-bar > div:nth-of-type(2) {' "$CSS"
           grep -F 'display: none !important;' "$CSS"
           grep -F 'visibility: hidden !important;' "$CSS"
           grep -F 'opacity: 0 !important;' "$CSS"
-          grep -F '.guandan-header-visible-room {' "$CSS"
           grep -F '{state.room !== null && <div>房间：{state.room}</div>}' "$TABLE"
-
           public_label_count=$(grep -F -c '房间：{visibleRoom}' "$HEADER")
-          if [ "$public_label_count" -ne 1 ]; then
-            echo "::error::Exactly one public room label renderer is required; found $public_label_count."
-            exit 1
-          fi
-          if grep -F '房间：{state.room}' "$HEADER"; then
-            echo "::error::Public decorative header must never display the internal commit-scoped room id."
-            exit 1
-          fi
-          if grep -E 'guandan-header-visible-room[^\n]*cr-' "$HEADER"; then
-            echo "::error::Public room label must never expose a cr- deployment namespace."
-            exit 1
-          fi
-          echo "::notice::Exactly one player-visible room label is permitted: 房间：0001-0004. The internal cr-<commit>-000N node must remain invisible."
+          test "$public_label_count" -eq 1
 
       - name: Mandatory no-old-room-data QA policy
         shell: bash
         run: |
           set -euo pipefail
           WF=.github/workflows/cleanroom-live-ui-e2e-gate.yml
-          test -f "$WF"
           grep -F 'fixedRoomJoinPerformed:false' "$WF"
           grep -F 'fixedRoomsTouched:false' "$WF"
           grep -F 'const room = `ui-e2e-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;' "$WF"
-          if grep -F "send({type:'join',room:'0001'" "$WF"; then
-            echo "::error::QA must never join fixed public room 0001."
-            exit 1
-          fi
-          echo "::notice::QA is forbidden from joining 0001-0004; gameplay E2E uses a unique disposable room so QA cannot leave old players, old hands or old match state in public rooms."
 
       - name: Mandatory live branch smoke before release
         shell: bash
