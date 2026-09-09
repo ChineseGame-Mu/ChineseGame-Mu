@@ -22,7 +22,7 @@ jobs:
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Mandatory iPhone lobby visual geometry
+      - name: Mandatory final-art lobby visual geometry
         run: |
           node --input-type=module <<'NODE'
           import { chromium } from 'playwright';
@@ -39,14 +39,14 @@ jobs:
           if (actualCommit !== process.env.EXPECTED_COMMIT) throw new Error(`stale fixed link: ${actualCommit}`);
 
           const required = {
-            shell: '.cleanroom-approved-lobby',
-            brand: '.cleanroom-brand-approved',
-            emblem: '.cleanroom-emblem',
-            emblemTitle: '.cleanroom-emblem-title',
-            title: '.cleanroom-game-title',
-            english: '.cleanroom-game-title-en',
-            tagline: '.cleanroom-game-tagline',
-            card: '.cleanroom-join-card',
+            shell: '.cleanroom-final-shell',
+            stage: '.cleanroom-final-stage',
+            art: '.cleanroom-final-art',
+            form: '.cleanroom-final-form',
+            room: '#cleanroom-room',
+            players: '#cleanroom-player-count',
+            name: '#cleanroom-player-name',
+            enter: '#cleanroom-enter-room',
           };
           for (const [name, sel] of Object.entries(required)) {
             const loc = page.locator(sel);
@@ -54,26 +54,43 @@ jobs:
             if (!(await loc.isVisible())) throw new Error(`${name} must be visible`);
           }
 
+          const art = page.locator(required.art);
+          const src = await art.getAttribute('src');
+          if (!src?.startsWith('data:image/webp;base64,')) throw new Error('approved artwork data URI missing');
+          const imageInfo = await art.evaluate((img) => ({naturalWidth: img.naturalWidth, naturalHeight: img.naturalHeight, complete: img.complete}));
+          if (!imageInfo.complete || imageInfo.naturalWidth < 300 || imageInfo.naturalHeight < 250) throw new Error(`artwork failed to decode: ${JSON.stringify(imageInfo)}`);
+
+          const roomOptions = await page.locator('#cleanroom-room option').allTextContents();
+          if (JSON.stringify(roomOptions) !== JSON.stringify(['0001','0002','0003','0004'])) throw new Error(`wrong room options: ${JSON.stringify(roomOptions)}`);
+          const playerOptions = await page.locator('#cleanroom-player-count option').allTextContents();
+          if (playerOptions.length !== 6) throw new Error(`wrong player option count: ${playerOptions.length}`);
+          if (await page.locator('#cleanroom-room').inputValue() !== '0004') throw new Error('default room must be 0004');
+
           const box = async sel => {
             const b = await page.locator(sel).boundingBox();
             if (!b) throw new Error(`missing box for ${sel}`);
             return {top:b.y,bottom:b.y+b.height,left:b.x,right:b.x+b.width,width:b.width,height:b.height};
           };
-          const emblem = await box(required.emblem);
-          const title = await box(required.title);
-          const english = await box(required.english);
-          const tagline = await box(required.tagline);
-          const card = await box(required.card);
+          const stage = await box(required.stage);
+          const room = await box(required.room);
+          const players = await box(required.players);
+          const name = await box(required.name);
+          const enter = await box(required.enter);
 
-          if (emblem.bottom > title.top) throw new Error(`emblem overlaps title: ${JSON.stringify({emblem,title})}`);
-          if (title.bottom > english.top) throw new Error(`Chinese title overlaps English title: ${JSON.stringify({title,english})}`);
-          if (english.bottom > tagline.top) throw new Error(`English title overlaps tagline: ${JSON.stringify({english,tagline})}`);
-          if (english.bottom > card.top) throw new Error(`English title overlaps join card: ${JSON.stringify({english,card})}`);
-          if (tagline.bottom > card.top) throw new Error(`tagline overlaps join card: ${JSON.stringify({tagline,card})}`);
-          if (title.width > 360 || card.width > 370) throw new Error('mobile content exceeds safe viewport width');
+          for (const [label,b] of Object.entries({room,players,name,enter})) {
+            if (b.left < 0 || b.right > 390 || b.top < 0 || b.bottom > 844) throw new Error(`${label} outside viewport: ${JSON.stringify(b)}`);
+            if (b.width < 130 || b.height < 25) throw new Error(`${label} too small: ${JSON.stringify(b)}`);
+          }
+          if (!(room.bottom < players.top && players.bottom < name.top && name.bottom < enter.top)) throw new Error('live controls overlap or are out of order');
+          const center = b => b.left + b.width / 2;
+          for (const [label,b] of Object.entries({room,players,name,enter})) {
+            if (Math.abs(center(b) - 195) > 8) throw new Error(`${label} not horizontally centered: ${JSON.stringify(b)}`);
+          }
+          if (Math.abs(room.width - players.width) > 4 || Math.abs(room.width - name.width) > 4 || Math.abs(room.width - enter.width) > 4) throw new Error('overlay widths do not align');
+          if (stage.height < 840) throw new Error(`stage does not fill iPhone viewport: ${JSON.stringify(stage)}`);
 
           await page.screenshot({path:'lobby-iphone-390x844.png', fullPage:true});
-          console.log(JSON.stringify({type:'lobby_visual_gate_pass',viewport:{width:390,height:844},actualCommit,emblem,title,english,tagline,card}));
+          console.log(JSON.stringify({type:'lobby_visual_gate_pass',viewport:{width:390,height:844},actualCommit,imageInfo,stage,room,players,name,enter}));
           await browser.close();
           NODE
       - uses: actions/upload-artifact@v4
