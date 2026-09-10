@@ -83,6 +83,7 @@ const CleanroomEntry = (): JSX.Element => {
 
   return (
     <main className="cleanroom-final-shell">
+      <img className="cleanroom-final-backdrop" src={cleanroomLobbyFinalImage} alt="" aria-hidden="true" />
       <div className="cleanroom-final-stage">
         <img className="cleanroom-final-art" src={cleanroomLobbyFinalImage} alt="掼蛋游戏山水牌室" />
         <form className="cleanroom-final-form" onSubmit={submit} aria-label="加入牌室">
