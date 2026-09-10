@@ -106,8 +106,10 @@ jobs:
           set -euo pipefail
           ENTRY=frontend/src/CleanroomEntry.tsx
           GATE=frontend/src/GuandanStartGate.tsx
+          TEST=frontend/src/guandanInitialDrawLifecycle.test.ts
           test -f "$ENTRY"
           test -f "$GATE"
+          test -f "$TEST"
           grep -F 'import GuandanStartGate from "./GuandanStartGate";' "$ENTRY"
           mount_count=$(grep -oF '<GuandanStartGate />' "$ENTRY" | wc -l | tr -d ' ')
           test "$mount_count" -eq 1
@@ -119,11 +121,11 @@ jobs:
             echo "::error::Pre-start turn assignment must not suppress the Start button."
             exit 1
           fi
-          grep -F 'const hideInitialDraw = started || serverPlayStarted;' "$GATE"
-          grep -F '!serverPlayStarted &&' "$GATE"
-          grep -F 'document.body.classList.toggle(STARTED_BODY_CLASS, hideInitialDraw);' "$GATE"
+          grep -F 'nextInitialDrawHidden' "$GATE"
+          grep -F 'does not reappear when lastPlay and tablePlays clear between tricks' "$TEST"
+          grep -F 'only a genuinely new full deal resets the per-hand hide latch' "$TEST"
           grep -F 'aria-label="开始本局出牌"' "$GATE"
-          echo "::notice::Exactly one Start gate is mounted; duplicate visible Start buttons are forbidden; initial draw hides only after Start or real play history."
+          echo "::notice::Exactly one Start gate is mounted; initial draw must stay hidden for the whole hand once Start/real play occurs, including after trick collection."
 
       - name: Mandatory public player-count rendering contract
         shell: bash
@@ -165,6 +167,13 @@ jobs:
           cd frontend
           corepack enable
           yarn install --frozen-lockfile --ignore-scripts --non-interactive
+
+      - name: Mandatory initial-draw whole-hand regression test
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd frontend
+          yarn test guandanInitialDrawLifecycle.test.ts --runInBand
 
       - name: Mandatory behavioral current-trick accumulation test
         shell: bash
