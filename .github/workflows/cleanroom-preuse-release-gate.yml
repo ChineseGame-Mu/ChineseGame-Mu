@@ -109,7 +109,10 @@ jobs:
           test -f "$ENTRY"
           test -f "$GATE"
           grep -F 'import GuandanStartGate from "./GuandanStartGate";' "$ENTRY"
-          grep -F '<GuandanStartGate />' "$ENTRY"
+          mount_count=$(grep -oF '<GuandanStartGate />' "$ENTRY" | wc -l | tr -d ' ')
+          test "$mount_count" -eq 1
+          grep -F 'let activeStartGateOwner: symbol | null = null;' "$GATE"
+          grep -F 'data-start-gate-singleton="true"' "$GATE"
           grep -F 'const serverPlayStarted =' "$GATE"
           grep -F 'state.lastPlay.length > 0 || state.tablePlays.length > 0;' "$GATE"
           if grep -F 'state.turn !== null || state.lastPlay.length > 0 || state.tablePlays.length > 0;' "$GATE"; then
@@ -120,7 +123,17 @@ jobs:
           grep -F '!serverPlayStarted &&' "$GATE"
           grep -F 'document.body.classList.toggle(STARTED_BODY_CLASS, hideInitialDraw);' "$GATE"
           grep -F 'aria-label="开始本局出牌"' "$GATE"
-          echo "::notice::Start gate must be mounted and visible before first play even when turn is preassigned; initial draw hides only after Start or real play history."
+          echo "::notice::Exactly one Start gate is mounted; duplicate visible Start buttons are forbidden; initial draw hides only after Start or real play history."
+
+      - name: Mandatory public player-count rendering contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          TABLE=frontend/src/GuandanTable.tsx
+          grep -F 'const supportedPlayerCounts = [4, 6, 8, 10, 12, 14] as const;' "$TABLE"
+          grep -F 'const effectiveTableSize =' "$TABLE"
+          grep -F 'state.players.map((player, index) =>' "$TABLE"
+          echo "::notice::Public backs remain bound to actual joined players; selected table size must be preserved in the URL and backend state."
 
       - name: Mandatory live branch smoke before release
         shell: bash
