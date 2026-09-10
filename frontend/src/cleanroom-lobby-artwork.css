@@ -53,24 +53,35 @@
   width:39.6% !important;
   border:1px solid rgba(157,126,70,.62) !important;
   border-radius:.5rem !important;
-  background:rgba(255,254,247,.94) !important;
+  background-color:rgba(255,254,247,.94) !important;
   color:#173f30 !important;
-  padding:0 .8rem !important;
+  padding:0 .78rem !important;
   outline:none !important;
   box-shadow:0 1px 2px rgba(62,52,33,.10) !important;
-  font-size:clamp(14px,1.9svh,21px) !important;
+  font-size:clamp(14px,1.65svh,18px) !important;
+  font-weight:400 !important;
+  line-height:1.15 !important;
 }
 .cleanroom-final-control:focus { border-color:rgba(165,125,57,.85) !important; box-shadow:0 0 0 2px rgba(202,165,91,.18) !important; }
+.cleanroom-final-room,.cleanroom-final-players {
+  -webkit-appearance:none !important;
+  appearance:none !important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 12'%3E%3Cpath d='M2 2l8 8 8-8' fill='none' stroke='%237b7f7a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat:no-repeat !important;
+  background-position:right .8rem center !important;
+  background-size:.72rem .44rem !important;
+  padding-right:2rem !important;
+}
 .cleanroom-final-room { top:51.82% !important; height:3.72% !important; }
 .cleanroom-final-players { top:59.10% !important; height:3.72% !important; }
 .cleanroom-final-name {
   top:69.18% !important;
   height:4.48% !important;
-  padding-left:2.9rem !important;
+  padding-left:2.65rem !important;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='8' r='3.25' fill='none' stroke='%23848b85' stroke-width='1.5'/%3E%3Cpath d='M5.8 19c.55-3.45 2.65-5.25 6.2-5.25S17.65 15.55 18.2 19' fill='none' stroke='%23848b85' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") !important;
   background-repeat:no-repeat !important;
-  background-position:.8rem 50% !important;
-  background-size:1.35rem 1.35rem !important;
+  background-position:.76rem 50% !important;
+  background-size:1.22rem 1.22rem !important;
 }
 .cleanroom-final-name::placeholder { color:#8f928e !important; opacity:.9 !important; }
 .cleanroom-final-enter {
@@ -92,10 +103,26 @@
 .cleanroom-final-enter:focus-visible { outline:3px solid rgba(191,149,66,.72) !important; outline-offset:2px !important; }
 .cleanroom-final-enter:disabled { opacity:1 !important; }
 @media (max-width: 560px) and (orientation: portrait) {
-  .cleanroom-final-shell { align-items: flex-start; }
+  .cleanroom-final-shell { align-items:flex-start; }
   .cleanroom-final-stage { width:100vw; box-shadow:none; }
   .cleanroom-final-backdrop { inset:0; width:100%; height:100%; transform:none; filter:blur(24px) saturate(.9) brightness(1.08); opacity:.36; }
-  .cleanroom-final-control { font-size:clamp(14px,3.6vw,18px) !important; }
+  .cleanroom-final-control {
+    font-size:16px !important;
+    line-height:1 !important;
+    padding-top:0 !important;
+    padding-bottom:0 !important;
+  }
+  .cleanroom-final-room,.cleanroom-final-players {
+    background-position:right .62rem center !important;
+    background-size:.62rem .38rem !important;
+    padding-left:.66rem !important;
+    padding-right:1.65rem !important;
+  }
+  .cleanroom-final-name {
+    padding-left:2.2rem !important;
+    background-position:.62rem 50% !important;
+    background-size:1.05rem 1.05rem !important;
+  }
 }
 @media (orientation:landscape) {
   .cleanroom-final-stage { width:min(100vw,calc(100svh * 1.1550985433)); }
