@@ -9,7 +9,7 @@ on:
 jobs:
   preuse-release-gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     env:
       STALE_MANUAL_URL: https://yihua-2ah5da0zg-chinese-game.vercel.app
       STALE_MANUAL_SHA: 71c58ed698d5bde1c56c907b8df468f65e8560ea
@@ -158,14 +158,41 @@ jobs:
           cache: yarn
           cache-dependency-path: frontend/yarn.lock
 
-      - name: Mandatory behavioral current-trick accumulation test
+      - name: Mandatory install with locked dependencies
         shell: bash
         run: |
           set -euo pipefail
           cd frontend
           corepack enable
           yarn install --frozen-lockfile --ignore-scripts --non-interactive
+
+      - name: Mandatory behavioral current-trick accumulation test
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd frontend
           yarn test guandanCurrentTrickPlays.test.ts --runInBand
+
+      - name: Mandatory full frontend regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd frontend
+          yarn test --runInBand
+
+      - name: Mandatory frontend lint error check
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd frontend
+          yarn lint
+
+      - name: Mandatory production build and TypeScript compile check
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd frontend
+          yarn build
 
       - name: Mandatory live branch smoke before release
         shell: bash
