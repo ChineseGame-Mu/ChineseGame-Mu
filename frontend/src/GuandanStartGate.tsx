@@ -18,6 +18,9 @@ const GuandanStartGate: React.FunctionComponent = () => {
 
   const gameStarted =
     state.hand.length > 0 || state.handCounts.some((count) => count > 0);
+  const serverPlayStarted =
+    state.turn !== null || state.lastPlay.length > 0 || state.tablePlays.length > 0;
+  const hideInitialDraw = started || serverPlayStarted;
   const freshDeal =
     state.cardsPerPlayer !== null &&
     state.handCounts.length > 0 &&
@@ -25,6 +28,7 @@ const GuandanStartGate: React.FunctionComponent = () => {
   const shouldOfferStart =
     state.seat !== null &&
     gameStarted &&
+    !serverPlayStarted &&
     freshDeal &&
     state.nextRoundPhase === null &&
     state.pendingTribute === null &&
@@ -57,8 +61,8 @@ const GuandanStartGate: React.FunctionComponent = () => {
   }, []);
 
   React.useEffect(() => {
-    document.body.classList.toggle(STARTED_BODY_CLASS, started);
-  }, [started]);
+    document.body.classList.toggle(STARTED_BODY_CLASS, hideInitialDraw);
+  }, [hideInitialDraw]);
 
   React.useEffect(() => {
     const isNewDeal = freshDeal && !previousFreshDeal.current;
