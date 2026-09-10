@@ -154,6 +154,26 @@ jobs:
           grep -F 'clears old cards only when the completed trick has been collected' "$TEST"
           echo "::notice::Public table must retain every played card/play for the current trick until collection, then clear for the next trick."
 
+      - name: Mandatory 借东风 authoritative turn-rule contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          PATCH=backend/build.rs
+          HANDLER=backend/src/guandan_handler.rs
+          test -f "$PATCH"
+          test -f "$HANDLER"
+          grep -F 'fn assign_next_trick_leader(game: &mut GuandanGameState, winner: usize)' "$PATCH"
+          grep -F 'let partner = (winner + 2) % GUANDAN_CLASSIC_PLAYER_COUNT;' "$PATCH"
+          grep -F 'assign_next_trick_leader(&mut state.game, winner);' "$PATCH"
+          grep -F 'borrow_east_wind_finished_x2_gives_next_lead_to_x4' "$PATCH"
+          echo "::notice::A finished four-player trick winner must transfer the next lead to the opposite-seat partner (借东风), never to an opponent by seat-order fallback."
+
+      - name: Mandatory 借东风 backend behavioral regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test -p shengji borrow_east_wind_finished_x2_gives_next_lead_to_x4 -- --nocapture
+
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
