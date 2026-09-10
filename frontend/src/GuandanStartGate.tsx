@@ -18,8 +18,10 @@ const GuandanStartGate: React.FunctionComponent = () => {
 
   const gameStarted =
     state.hand.length > 0 || state.handCounts.some((count) => count > 0);
+  // A turn can be assigned as part of the initial draw before the user presses
+  // Start. Only actual play history is authoritative evidence that play began.
   const serverPlayStarted =
-    state.turn !== null || state.lastPlay.length > 0 || state.tablePlays.length > 0;
+    state.lastPlay.length > 0 || state.tablePlays.length > 0;
   const hideInitialDraw = started || serverPlayStarted;
   const freshDeal =
     state.cardsPerPlayer !== null &&
