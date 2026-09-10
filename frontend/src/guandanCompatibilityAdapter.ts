@@ -119,6 +119,41 @@ const advanceRank = (level: GuandanRank, steps: number): GuandanRank => {
   );
 };
 
+const trickPlayKey = (play: { player: number; cards: GuandanCard[] }): string =>
+  `${play.player}:${JSON.stringify(play.cards)}`;
+
+export const mergeCurrentTrickPlays = (
+  previous: Array<{ player: number; cards: GuandanCard[] }>,
+  incoming: Array<{ player: number; cards: GuandanCard[] }>,
+  previousTrickComplete: boolean,
+  incomingTrickComplete: boolean,
+  incomingLastPlay: GuandanCard[],
+): Array<{ player: number; cards: GuandanCard[] }> => {
+  // Once a completed trick has been collected and the next trick begins, clear
+  // the old public cards. Some backends send only the newest play rather than
+  // the complete current-trick list, so otherwise preserve and append every
+  // distinct play until collection.
+  if (
+    incoming.length === 0 &&
+    incomingLastPlay.length === 0 &&
+    previous.length > 0
+  ) {
+    return [];
+  }
+
+  const base =
+    previousTrickComplete && !incomingTrickComplete ? [] : [...previous];
+  const seen = new Set(base.map(trickPlayKey));
+  for (const play of incoming) {
+    const key = trickPlayKey(play);
+    if (!seen.has(key)) {
+      base.push(play);
+      seen.add(key);
+    }
+  }
+  return base;
+};
+
 export const adaptGuandanServerMessage = (
   state: GuandanTableState,
   message: GuandanServerMessage,
@@ -191,6 +226,13 @@ export const adaptGuandanServerMessage = (
       const effectiveLevel = shouldInferNextLevel
         ? advanceRank(serverLevel, promotionSteps)
         : serverLevel;
+      const currentTrickPlays = mergeCurrentTrickPlays(
+        state.tablePlays,
+        message.table_plays,
+        state.trickComplete,
+        message.trick_complete,
+        message.last_play,
+      );
 
       return {
         ...state,
@@ -202,7 +244,7 @@ export const adaptGuandanServerMessage = (
         handCounts: message.hand_counts,
         lastPlay: message.last_play,
         lastPlayer: message.last_player,
-        tablePlays: message.table_plays,
+        tablePlays: currentTrickPlays,
         passes: message.passes,
         trickComplete: message.trick_complete,
         lastTrickWinner: message.last_trick_winner,
