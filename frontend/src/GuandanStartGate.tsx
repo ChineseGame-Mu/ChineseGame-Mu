@@ -8,9 +8,13 @@ const START_BUTTON_DELAY_MS = 3500;
 const STARTED_BODY_CLASS = "guandan-hand-started";
 const STARTED_STYLE_ID = "guandan-hide-initial-draw-after-start";
 
+let activeStartGateOwner: symbol | null = null;
+
 const GuandanStartGate: React.FunctionComponent = () => {
   const { state } = React.useContext(GuandanStateContext);
   const { send } = React.useContext(GuandanWebsocketContext);
+  const ownerToken = React.useRef(Symbol("guandan-start-gate-owner"));
+  const [ownsGate, setOwnsGate] = React.useState(false);
   const [started, setStarted] = React.useState(false);
   const [ready, setReady] = React.useState(false);
   const [target, setTarget] = React.useState<Element | null>(null);
@@ -38,6 +42,20 @@ const GuandanStartGate: React.FunctionComponent = () => {
     state.matchWinner === null &&
     state.lastPlay.length === 0 &&
     state.tablePlays.length === 0;
+
+  React.useEffect(() => {
+    if (activeStartGateOwner === null) {
+      activeStartGateOwner = ownerToken.current;
+      setOwnsGate(true);
+    } else if (activeStartGateOwner === ownerToken.current) {
+      setOwnsGate(true);
+    }
+    return () => {
+      if (activeStartGateOwner === ownerToken.current) {
+        activeStartGateOwner = null;
+      }
+    };
+  }, []);
 
   React.useEffect(() => {
     const findTarget = (): void => {
@@ -92,7 +110,7 @@ const GuandanStartGate: React.FunctionComponent = () => {
     return () => window.clearTimeout(timer);
   }, [shouldOfferStart, started, state.handCounts, state.turn]);
 
-  if (target === null || !shouldOfferStart || started || !ready) return null;
+  if (!ownsGate || target === null || !shouldOfferStart || started || !ready) return null;
 
   const start = (): void => {
     if (send({ type: "start_trick" } as any)) {
@@ -104,6 +122,7 @@ const GuandanStartGate: React.FunctionComponent = () => {
   return createPortal(
     <div
       className="guandan-start-trick-gate"
+      data-start-gate-singleton="true"
       style={{
         display: "flex",
         flexDirection: "column",
