@@ -9,11 +9,12 @@ on:
 jobs:
   preuse-release-gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 8
     env:
       STALE_MANUAL_URL: https://yihua-2ah5da0zg-chinese-game.vercel.app
       STALE_MANUAL_SHA: 71c58ed698d5bde1c56c907b8df468f65e8560ea
       LIVE_BRANCH_URL: https://yihua-mu-git-cleanroom-yihua-game-20260826-chinese-game.vercel.app
+      RELEASE_URL: https://yihua-mu.vercel.app/
     steps:
       - uses: actions/checkout@v4
 
@@ -55,6 +56,7 @@ jobs:
           grep -F "viewport: { width: 390, height: 844 }" "$VISUAL"
           grep -F "approved artwork data URI missing" "$VISUAL"
           grep -F "live controls overlap or are out of order" "$VISUAL"
+          grep -F 'RELEASE_URL: https://yihua-mu.vercel.app/' .github/workflows/cleanroom-preuse-release-gate.yml
           echo "::notice::Final artwork lobby and iPhone visual geometry QA contract are installed."
 
       - name: Mandatory fixed-room source contract and deployment isolation
@@ -120,9 +122,38 @@ jobs:
             code=$(curl -L -sS -o /tmp/live.html -w '%{http_code}' "$LIVE_BRANCH_URL" || true)
             if [ "$code" = "200" ] && [ "$(wc -c </tmp/live.html)" -gt 500 ]; then
               echo "Live branch frontend reachable: HTTP $code"
-              exit 0
+              break
+            fi
+            if [ "$i" = 6 ]; then
+              echo "::error::Latest branch frontend did not become healthy before release gate timeout."
+              exit 1
             fi
             sleep 10
           done
-          echo "::error::Latest branch frontend did not become healthy before release gate timeout."
-          exit 1
+
+      - name: Mandatory public short-link freshness before sharing
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Checking release URL: $RELEASE_URL"
+          ok=0
+          for i in $(seq 1 24); do
+            code=$(curl -L -sS -o /tmp/release.html -w '%{http_code}' "$RELEASE_URL" || true)
+            if [ "$code" = "200" ] && [ "$(wc -c </tmp/release.html)" -gt 500 ]; then
+              actual=$(grep -oE 'data-cleanroom-commit="[0-9a-f]{40}"' /tmp/release.html | head -1 | sed -E 's/.*="([0-9a-f]{40})"/\1/' || true)
+              if [ -n "$actual" ] && [ "$actual" = "$GITHUB_SHA" ]; then
+                echo "Public short link is healthy and current: $actual"
+                ok=1
+                break
+              fi
+              echo "Attempt $i: short link HTTP $code but commit is '${actual:-missing}', expected '$GITHUB_SHA'"
+            else
+              echo "Attempt $i: short link not healthy yet, HTTP $code"
+            fi
+            sleep 10
+          done
+          if [ "$ok" != 1 ]; then
+            echo "::error::Do not share $RELEASE_URL: it is not serving the current commit $GITHUB_SHA."
+            exit 1
+          fi
+          echo "::notice::The public URL may only be given to the user after this gate and the required visual/E2E gates pass."
