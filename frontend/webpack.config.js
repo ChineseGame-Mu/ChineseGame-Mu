@@ -75,6 +75,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       filename: "index.html",
       template: "static/index.html",
+      templateParameters: { cleanroomBuildCommit },
     }),
     new MiniCssExtractPlugin({
       filename: "style.css",
