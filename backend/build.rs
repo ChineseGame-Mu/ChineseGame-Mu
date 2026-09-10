@@ -101,9 +101,9 @@ fn assign_next_trick_leader(game: &mut GuandanGameState, winner: usize) {
         source.replace_range(start..start + reset.len(), reset_fixed);
     }
 
-    // Inject a behavioral regression test into the backend test module so the
+    // Inject behavioral regression tests into the backend test module so the
     // production build-time patch and the rule itself are tested together.
-    if !source.contains("borrow_east_wind_finished_x2_gives_next_lead_to_x4") {
+    if !source.contains("borrow_east_wind_finished_winner_gives_lead_to_partner_all_seats") {
         let test_anchor = r#"    #[test]
     fn initial_draw_always_selects_a_real_player() {
 "#;
@@ -128,6 +128,30 @@ fn assign_next_trick_leader(game: &mut GuandanGameState, winner: usize) {
     }
 
     #[test]
+    fn borrow_east_wind_finished_winner_gives_lead_to_partner_all_seats() {
+        for winner in 0..GUANDAN_CLASSIC_PLAYER_COUNT {
+            let partner = (winner + 2) % GUANDAN_CLASSIC_PLAYER_COUNT;
+            let mut game = GuandanGameState::default();
+            game.hands = vec![
+                vec![card(Suit::Clubs, Rank::Three)],
+                vec![card(Suit::Diamonds, Rank::Four)],
+                vec![card(Suit::Hearts, Rank::Five)],
+                vec![card(Suit::Spades, Rank::Six)],
+            ];
+            game.hands[winner].clear();
+
+            assign_next_trick_leader(&mut game, winner);
+            assert_eq!(
+                game.turn,
+                partner,
+                "finished winner seat {} must transfer next lead to partner seat {}",
+                winner + 1,
+                partner + 1
+            );
+        }
+    }
+
+    #[test]
     fn initial_draw_always_selects_a_real_player() {
 "#;
         let Some(start) = source.find(test_anchor) else {
@@ -138,6 +162,7 @@ fn assign_next_trick_leader(game: &mut GuandanGameState, winner: usize) {
 
     if !source.contains("assign_next_trick_leader(&mut state.game, winner);")
         || !source.contains("borrow_east_wind_finished_x2_gives_next_lead_to_x4")
+        || !source.contains("borrow_east_wind_finished_winner_gives_lead_to_partner_all_seats")
     {
         panic!("Guandan borrow-east-wind patch did not install completely");
     }
