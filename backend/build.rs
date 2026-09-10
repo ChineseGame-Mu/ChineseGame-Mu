@@ -125,6 +125,28 @@ fn assign_next_trick_leader(game: &mut GuandanGameState, winner: usize) {
         game.hands[1].push(card(Suit::Hearts, Rank::Six));
         assign_next_trick_leader(&mut game, 1);
         assert_eq!(game.turn, 1, "non-finished winner must keep the next lead");
+
+        // Mandatory matrix: the same partner-transfer rule must hold from every
+        // possible winner seat, so fixing x2 cannot regress x1/x3/x4.
+        for winner in 0..GUANDAN_CLASSIC_PLAYER_COUNT {
+            let partner = (winner + 2) % GUANDAN_CLASSIC_PLAYER_COUNT;
+            let mut matrix_game = GuandanGameState::default();
+            matrix_game.hands = vec![
+                vec![card(Suit::Clubs, Rank::Three)],
+                vec![card(Suit::Diamonds, Rank::Four)],
+                vec![card(Suit::Hearts, Rank::Five)],
+                vec![card(Suit::Spades, Rank::Six)],
+            ];
+            matrix_game.hands[winner].clear();
+            assign_next_trick_leader(&mut matrix_game, winner);
+            assert_eq!(
+                matrix_game.turn,
+                partner,
+                "mandatory 借东风 matrix failed: winner seat {} must give lead to partner seat {}",
+                winner + 1,
+                partner + 1
+            );
+        }
     }
 
     #[test]
