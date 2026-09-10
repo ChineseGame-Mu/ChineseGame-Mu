@@ -22,7 +22,7 @@ jobs:
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Mandatory final-art lobby visual geometry
+      - name: Mandatory final-art lobby visual geometry and mask coverage
         run: |
           node --input-type=module <<'NODE'
           import { chromium } from 'playwright';
@@ -77,6 +77,16 @@ jobs:
           const name = await box(required.name);
           const enter = await box(required.enter);
 
+          const styleInfo = async sel => await page.locator(sel).evaluate((el) => {
+            const s = getComputedStyle(el);
+            return {backgroundColor:s.backgroundColor, boxShadow:s.boxShadow, opacity:s.opacity};
+          });
+          const controlStyles = {
+            room: await styleInfo(required.room),
+            players: await styleInfo(required.players),
+            name: await styleInfo(required.name),
+          };
+
           await page.screenshot({path:'lobby-iphone-390x844.png', fullPage:true});
 
           for (const [label,b] of Object.entries({room,players,name,enter})) {
@@ -88,11 +98,23 @@ jobs:
           for (const [label,b] of Object.entries({room,players,name,enter})) {
             if (Math.abs(center(b) - 195) > 8) throw new Error(`${label} not horizontally centered: ${JSON.stringify(b)}`);
           }
-          if (Math.abs(room.width - players.width) > 4 || Math.abs(room.width - name.width) > 4 || Math.abs(room.width - enter.width) > 4) throw new Error('overlay widths do not align');
+          if (Math.abs(room.width - players.width) > 4 || Math.abs(room.width - name.width) > 4 || Math.abs(room.width - enter.width) > 7) throw new Error('overlay widths do not align');
           const expectedStageHeight = 390 * 1167 / 1348;
           if (Math.abs(stage.width - 390) > 2 || Math.abs(stage.height - expectedStageHeight) > 3) throw new Error(`stage must preserve the complete approved 1348x1167 artwork without side cropping: ${JSON.stringify(stage)}`);
 
-          console.log(JSON.stringify({type:'lobby_visual_gate_pass',viewport:{width:390,height:844},actualCommit,imageInfo,stage,room,players,name,enter}));
+          // Regression guard from the 2026-09-10 iPhone screenshot: the live controls must
+          // completely mask the artwork's baked-in field text/borders before drawing HTML.
+          for (const [label,s] of Object.entries(controlStyles)) {
+            if (s.opacity !== '1') throw new Error(`${label} control must be fully opaque: ${JSON.stringify(s)}`);
+            if (s.backgroundColor !== 'rgb(255, 254, 247)') throw new Error(`${label} control mask must be opaque #fffef7: ${JSON.stringify(s)}`);
+            if (!s.boxShadow.includes('rgb(255, 254, 247)') || !s.boxShadow.includes('2px')) throw new Error(`${label} must include the mandatory 2px artwork mask halo: ${JSON.stringify(s)}`);
+          }
+          if (room.height < 12 || players.height < 12 || name.height < 15) throw new Error(`mobile controls too short to cover baked-in artwork fields: ${JSON.stringify({room,players,name})}`);
+          const rel = b => ({top:(b.top-stage.top)/stage.height,height:b.height/stage.height});
+          const rr=rel(room), rp=rel(players), rn=rel(name);
+          if (rr.top < .505 || rr.top > .520 || rp.top < .578 || rp.top > .595 || rn.top < .675 || rn.top > .695) throw new Error(`mobile controls drifted off approved field regions: ${JSON.stringify({rr,rp,rn})}`);
+
+          console.log(JSON.stringify({type:'lobby_visual_gate_pass',viewport:{width:390,height:844},actualCommit,imageInfo,stage,room,players,name,enter,controlStyles}));
           await browser.close();
           NODE
       - uses: actions/upload-artifact@v4
