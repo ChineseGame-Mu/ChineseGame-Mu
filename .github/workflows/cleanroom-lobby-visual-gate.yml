@@ -58,7 +58,7 @@ jobs:
           const src = await art.getAttribute('src');
           if (!src?.startsWith('data:image/webp;base64,')) throw new Error('approved artwork data URI missing');
           const imageInfo = await art.evaluate((img) => ({naturalWidth: img.naturalWidth, naturalHeight: img.naturalHeight, complete: img.complete}));
-          if (!imageInfo.complete || imageInfo.naturalWidth < 600 || imageInfo.naturalHeight < 500) throw new Error(`artwork failed to decode or is not high resolution enough: ${JSON.stringify(imageInfo)}`);
+          if (!imageInfo.complete || imageInfo.naturalWidth !== 1348 || imageInfo.naturalHeight !== 1167) throw new Error(`artwork must be the exact 1348x1167 approved source: ${JSON.stringify(imageInfo)}`);
 
           const roomOptions = await page.locator('#cleanroom-room option').allTextContents();
           if (JSON.stringify(roomOptions) !== JSON.stringify(['0001','0002','0003','0004'])) throw new Error(`wrong room options: ${JSON.stringify(roomOptions)}`);
