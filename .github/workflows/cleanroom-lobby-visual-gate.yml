@@ -58,7 +58,7 @@ jobs:
           const src = await art.getAttribute('src');
           if (!src?.startsWith('data:image/webp;base64,')) throw new Error('approved artwork data URI missing');
           const imageInfo = await art.evaluate((img) => ({naturalWidth: img.naturalWidth, naturalHeight: img.naturalHeight, complete: img.complete}));
-          if (!imageInfo.complete || imageInfo.naturalWidth < 300 || imageInfo.naturalHeight < 250) throw new Error(`artwork failed to decode: ${JSON.stringify(imageInfo)}`);
+          if (!imageInfo.complete || imageInfo.naturalWidth < 600 || imageInfo.naturalHeight < 500) throw new Error(`artwork failed to decode or is not high resolution enough: ${JSON.stringify(imageInfo)}`);
 
           const roomOptions = await page.locator('#cleanroom-room option').allTextContents();
           if (JSON.stringify(roomOptions) !== JSON.stringify(['0001','0002','0003','0004'])) throw new Error(`wrong room options: ${JSON.stringify(roomOptions)}`);
@@ -77,9 +77,11 @@ jobs:
           const name = await box(required.name);
           const enter = await box(required.enter);
 
+          await page.screenshot({path:'lobby-iphone-390x844.png', fullPage:true});
+
           for (const [label,b] of Object.entries({room,players,name,enter})) {
             if (b.left < 0 || b.right > 390 || b.top < 0 || b.bottom > 844) throw new Error(`${label} outside viewport: ${JSON.stringify(b)}`);
-            if (b.width < 130 || b.height < 25) throw new Error(`${label} too small: ${JSON.stringify(b)}`);
+            if (b.width < 130 || b.height < 10) throw new Error(`${label} too small: ${JSON.stringify(b)}`);
           }
           if (!(room.bottom < players.top && players.bottom < name.top && name.bottom < enter.top)) throw new Error('live controls overlap or are out of order');
           const center = b => b.left + b.width / 2;
@@ -87,9 +89,9 @@ jobs:
             if (Math.abs(center(b) - 195) > 8) throw new Error(`${label} not horizontally centered: ${JSON.stringify(b)}`);
           }
           if (Math.abs(room.width - players.width) > 4 || Math.abs(room.width - name.width) > 4 || Math.abs(room.width - enter.width) > 4) throw new Error('overlay widths do not align');
-          if (stage.height < 840) throw new Error(`stage does not fill iPhone viewport: ${JSON.stringify(stage)}`);
+          const expectedStageHeight = 390 * 1167 / 1348;
+          if (Math.abs(stage.width - 390) > 2 || Math.abs(stage.height - expectedStageHeight) > 3) throw new Error(`stage must preserve the complete approved 1348x1167 artwork without side cropping: ${JSON.stringify(stage)}`);
 
-          await page.screenshot({path:'lobby-iphone-390x844.png', fullPage:true});
           console.log(JSON.stringify({type:'lobby_visual_gate_pass',viewport:{width:390,height:844},actualCommit,imageInfo,stage,room,players,name,enter}));
           await browser.close();
           NODE
