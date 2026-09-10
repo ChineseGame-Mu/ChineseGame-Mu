@@ -41,7 +41,6 @@ jobs:
           test -f "$ART"
           test -f "$IMAGE"
           test -f "$VISUAL"
-
           grep -F 'className="cleanroom-final-shell"' "$ENTRY"
           grep -F 'className="cleanroom-final-stage"' "$ENTRY"
           grep -F 'className="cleanroom-final-art"' "$ENTRY"
@@ -101,18 +100,27 @@ jobs:
           grep -F 'fixedRoomsTouched:false' "$WF"
           grep -F 'const room = `ui-e2e-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;' "$WF"
 
-      - name: Mandatory initial-draw disappears after Start
+      - name: Mandatory first-play Start gate and initial-draw lifecycle
         shell: bash
         run: |
           set -euo pipefail
+          ENTRY=frontend/src/CleanroomEntry.tsx
           GATE=frontend/src/GuandanStartGate.tsx
+          test -f "$ENTRY"
           test -f "$GATE"
+          grep -F 'import GuandanStartGate from "./GuandanStartGate";' "$ENTRY"
+          grep -F '<GuandanStartGate />' "$ENTRY"
           grep -F 'const serverPlayStarted =' "$GATE"
-          grep -F 'state.turn !== null || state.lastPlay.length > 0 || state.tablePlays.length > 0;' "$GATE"
+          grep -F 'state.lastPlay.length > 0 || state.tablePlays.length > 0;' "$GATE"
+          if grep -F 'state.turn !== null || state.lastPlay.length > 0 || state.tablePlays.length > 0;' "$GATE"; then
+            echo "::error::Pre-start turn assignment must not suppress the Start button."
+            exit 1
+          fi
           grep -F 'const hideInitialDraw = started || serverPlayStarted;' "$GATE"
           grep -F '!serverPlayStarted &&' "$GATE"
           grep -F 'document.body.classList.toggle(STARTED_BODY_CLASS, hideInitialDraw);' "$GATE"
-          echo "::notice::Initial draw overlay must hide immediately on Start and remain hidden from authoritative server play state."
+          grep -F 'aria-label="开始本局出牌"' "$GATE"
+          echo "::notice::Start gate must be mounted and visible before first play even when turn is preassigned; initial draw hides only after Start or real play history."
 
       - name: Mandatory live branch smoke before release
         shell: bash
