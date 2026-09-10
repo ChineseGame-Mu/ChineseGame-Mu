@@ -9,7 +9,7 @@ on:
 jobs:
   preuse-release-gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
     env:
       STALE_MANUAL_URL: https://yihua-2ah5da0zg-chinese-game.vercel.app
       STALE_MANUAL_SHA: 71c58ed698d5bde1c56c907b8df468f65e8560ea
@@ -134,6 +134,38 @@ jobs:
           grep -F 'const effectiveTableSize =' "$TABLE"
           grep -F 'state.players.map((player, index) =>' "$TABLE"
           echo "::notice::Public backs remain bound to actual joined players; selected table size must be preserved in the URL and backend state."
+
+      - name: Mandatory complete current-trick public history contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          ADAPTER=frontend/src/guandanCompatibilityAdapter.ts
+          TABLE=frontend/src/GuandanTable.tsx
+          TEST=frontend/src/guandanCurrentTrickPlays.test.ts
+          test -f "$ADAPTER"
+          test -f "$TABLE"
+          test -f "$TEST"
+          grep -F 'export const mergeCurrentTrickPlays =' "$ADAPTER"
+          grep -F 'tablePlays: currentTrickPlays,' "$ADAPTER"
+          grep -F 'state.tablePlays.map((play, playIndex) =>' "$TABLE"
+          grep -F 'keeps every distinct play when server snapshots contain only the newest play' "$TEST"
+          grep -F 'clears old cards only when the completed trick has been collected' "$TEST"
+          echo "::notice::Public table must retain every played card/play for the current trick until collection, then clear for the next trick."
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Mandatory behavioral current-trick accumulation test
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd frontend
+          corepack enable
+          yarn install --frozen-lockfile --ignore-scripts --non-interactive
+          yarn test guandanCurrentTrickPlays.test.ts --runInBand
 
       - name: Mandatory live branch smoke before release
         shell: bash
