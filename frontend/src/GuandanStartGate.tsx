@@ -10,12 +10,23 @@ const STARTED_STYLE_ID = "guandan-hide-initial-draw-after-start";
 
 let activeStartGateOwner: symbol | null = null;
 
+export const nextInitialDrawHidden = (
+  hiddenForHand: boolean,
+  isNewDeal: boolean,
+  started: boolean,
+  serverPlayStarted: boolean,
+): boolean => {
+  if (isNewDeal) return false;
+  return hiddenForHand || started || serverPlayStarted;
+};
+
 const GuandanStartGate: React.FunctionComponent = () => {
   const { state } = React.useContext(GuandanStateContext);
   const { send } = React.useContext(GuandanWebsocketContext);
   const ownerToken = React.useRef(Symbol("guandan-start-gate-owner"));
   const [ownsGate, setOwnsGate] = React.useState(false);
   const [started, setStarted] = React.useState(false);
+  const [hiddenForHand, setHiddenForHand] = React.useState(false);
   const [ready, setReady] = React.useState(false);
   const [target, setTarget] = React.useState<Element | null>(null);
   const previousFreshDeal = React.useRef(false);
@@ -26,7 +37,6 @@ const GuandanStartGate: React.FunctionComponent = () => {
   // Start. Only actual play history is authoritative evidence that play began.
   const serverPlayStarted =
     state.lastPlay.length > 0 || state.tablePlays.length > 0;
-  const hideInitialDraw = started || serverPlayStarted;
   const freshDeal =
     state.cardsPerPlayer !== null &&
     state.handCounts.length > 0 &&
@@ -34,6 +44,7 @@ const GuandanStartGate: React.FunctionComponent = () => {
   const shouldOfferStart =
     state.seat !== null &&
     gameStarted &&
+    !hiddenForHand &&
     !serverPlayStarted &&
     freshDeal &&
     state.nextRoundPhase === null &&
@@ -81,25 +92,31 @@ const GuandanStartGate: React.FunctionComponent = () => {
   }, []);
 
   React.useEffect(() => {
-    document.body.classList.toggle(STARTED_BODY_CLASS, hideInitialDraw);
-  }, [hideInitialDraw]);
+    document.body.classList.toggle(STARTED_BODY_CLASS, hiddenForHand || started);
+  }, [hiddenForHand, started]);
 
   React.useEffect(() => {
     const isNewDeal = freshDeal && !previousFreshDeal.current;
 
     if (!gameStarted) {
       setStarted(false);
+      setHiddenForHand(false);
       setReady(false);
     } else if (isNewDeal) {
       // A new hand has just been fully dealt. Re-arm the one-time Start gate.
-      // Do not reset on nextRoundPhase/trick transitions; otherwise the initial
-      // draw panel can reappear in the middle of the same hand.
+      // This is the only point where the persistent per-hand hide latch resets.
       setStarted(false);
+      setHiddenForHand(false);
       setReady(false);
+    } else if (serverPlayStarted) {
+      // Once any real play occurs, latch the initial-draw panel hidden for the
+      // rest of this hand. Do not unhide it when tablePlays/lastPlay clear
+      // between tricks.
+      setHiddenForHand(true);
     }
 
     previousFreshDeal.current = freshDeal;
-  }, [freshDeal, gameStarted]);
+  }, [freshDeal, gameStarted, serverPlayStarted]);
 
   React.useEffect(() => {
     if (!shouldOfferStart || started) {
@@ -115,6 +132,7 @@ const GuandanStartGate: React.FunctionComponent = () => {
   const start = (): void => {
     if (send({ type: "start_trick" } as any)) {
       setStarted(true);
+      setHiddenForHand(true);
       setReady(false);
     }
   };
