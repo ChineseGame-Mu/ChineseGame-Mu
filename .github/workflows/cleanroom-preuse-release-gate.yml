@@ -172,6 +172,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p frontend/dist
           cargo test -p shengji borrow_east_wind_finished_x2_gives_next_lead_to_x4 -- --nocapture
 
       - uses: actions/setup-node@v4
