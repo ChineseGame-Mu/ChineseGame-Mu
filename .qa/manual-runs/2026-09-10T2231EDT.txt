@@ -1,0 +1,2 @@
+Manual QA rerun requested by user on 2026-09-10 22:31 EDT.
+Purpose: trigger all push-based mandatory QA workflows without changing application logic.
